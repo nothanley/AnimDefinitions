@@ -28,15 +28,16 @@ public:
 
 	enum {
 		TYPE = 0x65707974,
-		PROJ = 0x6A6F7270,
-		ARGS = 0x73677261,
+		PROJ = 0x70726f6a,
+		ARGS = 0x61726773,
 		OVOR = 0x726F766F,
 		OVLY = 0x6F766C79,
 		VARI = 0x76617269,
 		EVNT = 0x65766E74,
 		ENUM = 0x656E756D,
 		DESC = 0x64657363,
-		CMDS = 0x636D6473
+		CMDS = 0x636D6473,
+		STMR = 0x73746D72
 	};
 
 	ADefHandler(const char* filePath) {
@@ -71,7 +72,8 @@ public:
 
 private:
 
-	void LoadArguements(int size) {
+	void LoadArguments(int size) {
+		/* Reads all binary arguments. Stores in argument array */
 		std::vector<DefArg> args;
 
 		for (int i = 0; i < size; i++) {
@@ -103,8 +105,62 @@ private:
 		}
 
 	}
+	
+	void LoadCommands(int size) {
+		/* Reads all 64-bit binary commands. Does not decode values, just stores in array */
+		std::vector<uint64_t> cmds;
 
-	/* Interprets every stream entry within animdef file object */
+		for (int i = 0; i < size; i++) {
+			uint64_t value = ReadUInt64(*fs);
+			cmds.push_back(value);
+		}
+	}
+
+	void LoadStateMirror(int size) {
+
+		/* Reads Event Mirror Defs */
+
+		std::vector<uint64_t> mirrorCmdMap;
+		std::vector<uint16_t> mirrorArgsMap;
+		std::vector<uint64_t> mirrorDescMap;
+		std::vector<uint32_t> mirrorBlendVarMap;
+
+		DWORD commandsCount = ReadUInt32(*fs);
+		for (int i = 0; i < commandsCount; i++) {
+			/* In game logic, these are compared with project strings
+			until a match is made and outputting its index */
+			uint64_t cmdHash_0 = ReadUInt64(*fs);
+			uint64_t cmdHash_1 = ReadUInt64(*fs);
+			mirrorCmdMap.push_back(cmdHash_0);
+			mirrorCmdMap.push_back(cmdHash_1);
+		}
+
+		DWORD argsCount = ReadUInt32(*fs);
+		for (int i = 0; i < argsCount; i++) {
+			uint16_t argPrm_0 = ReadUShort(*fs);
+			uint16_t argPrm_1 = ReadUShort(*fs);
+			mirrorArgsMap.push_back(argPrm_0);
+			mirrorArgsMap.push_back(argPrm_1);
+		}
+
+		DWORD descriptorCount = ReadUInt32(*fs);
+		for (int i = 0; i < descriptorCount; i++) {
+			uint64_t descHash_0 = ReadUInt64(*fs);
+			uint64_t descHash_1 = ReadUInt64(*fs);
+			mirrorDescMap.push_back(descHash_0);
+			mirrorDescMap.push_back(descHash_1);
+		}
+
+		DWORD blendVarCount = ReadUInt32(*fs);
+		for (int i = 0; i < blendVarCount; i++) {
+			uint32_t blvr = ReadUInt32(*fs);
+			ReadByte(*fs);
+			mirrorBlendVarMap.push_back(blvr);
+		}
+
+	}
+
+	/* Interprets all binary streams within animdef */
 	void LoadAnimDefData() {
 		DWORD fileMagic;
 		DWORD versionFlag;
@@ -119,17 +175,19 @@ private:
 			binType = ReadUInt32(*fs);
 			binCount = ReadUInt32(*fs);
 
-			switch (ntohl(binType)) {
+			switch (binType) {
 				case (PROJ):
 					cProjDefs.ParseProjectXML(binCount);
 					break;
 				case (ARGS):
-					LoadArguements(binCount);
+					LoadArguments(binCount);
 					break;
 				case (CMDS):
-					LoadArguements(binCount);
+					LoadCommands(binCount);
 					break;
-				// TODO: Jun18- Add CMDS and STMR parsers
+				case (STMR):
+					LoadStateMirror(binCount);
+					break;
 				default:
 					/* Covers general animdef streams */
 					cProjDefs.ParseProjectXML(binCount);
