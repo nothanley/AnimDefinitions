@@ -33,6 +33,7 @@ namespace StateNode {
 		uint32_t val32;
 		uint16_t val16;
 		uint8_t val8;
+		float valFloat;
 	};
 
 	struct AnimDef {
@@ -45,6 +46,7 @@ namespace StateNode {
 		std::vector<AnimDef> nodes;
 		std::vector<std::string> descriptors;
 		std::vector<GroupNode> groupNodes;
+		bool flag;
 
 	};
 };
@@ -81,7 +83,63 @@ public:
 		SELS = 0x736C6573
 	};
 
-	void ReadDTTs() {
+	void ProcessNode() {
+		std::vector<AnimDef> nodeArray;
+		uint32_t numNodes = ReadUInt32(*fs);
+
+		for (int i = 0; i < numNodes; i++) {
+			AnimDef node;
+			node.streamType = NODE;
+			node.flag = ReadBool(*fs);
+
+			ReadUInt32(*fs); // Init KVs
+			uint32_t numKVs = ReadUInt32(*fs);
+
+			for (int j = 0; j < numKVs; j++) {
+				kvProperty kvProp;
+				kvProp.streamSig = ReadUInt32(*fs);
+
+				switch (kvProp.streamSig) {
+					case (0xC748D578):
+						kvProp.val32 = ReadUInt32(*fs);
+						break;
+					case (0x42CB2C8):
+						kvProp.valFloat = ReadFloat(*fs);
+						break;
+					case (0x6F1A9819):
+						kvProp.valFloat = ReadFloat(*fs);
+						break;
+					case (0x8C103F9E):
+						kvProp.chars = ReadString(*fs, ReadUInt32(*fs));
+						break;
+					case (0x8E0B4BDF):
+						kvProp.val64 = ReadUInt64(*fs);
+						break;
+
+
+					case (0xCF0D984C):
+						kvProp.valFloat = ReadFloat(*fs);
+						break;
+					case (0xE39D3DA5):
+						kvProp.valFloat = ReadFloat(*fs);
+						break;
+					case (0xF43A2E0A):
+						kvProp.val8 = ReadBool(*fs);
+						break;
+					case (0xFDF783BE):
+						kvProp.chars = ReadString(*fs, ReadUInt32(*fs));
+						break;
+
+					default:
+						std::cout << "\nInvalid KV value. Cannot handle KV stream.";
+						break;
+				}
+				node.kvData.push_back(kvProp);
+			}
+		}
+	}
+
+	void ProcessDTTs() {
 		std::vector<AnimDef> dttArray;
 		uint32_t numDTTs = ReadUInt32(*fs);
 
@@ -89,11 +147,50 @@ public:
 			AnimDef dttNode;
 			dttNode.streamType = DTT_;
 
-			//do kvs
+			ReadUInt32(*fs); // Init KVs
+			uint32_t numKVs = ReadUInt32(*fs);
+			for (int j = 0; j < numKVs; j++) {
+				kvProperty kvProp;
+				kvProp.streamSig = ReadUInt32(*fs);
+
+				switch (kvProp.streamSig) {
+					case (0xDADA2544):
+						kvProp.val32 = ReadUInt32(*fs);
+						break;
+					case (0x11D9945):
+						kvProp.chars = ReadString(*fs, ReadUInt32(*fs));
+						break;
+					case (0x813DE48):
+						kvProp.val8 = ReadBool(*fs);
+						break;
+					case (0x33DEED73):
+						kvProp.val64 = ReadUInt64(*fs);
+						break;
+					case (0x3A823F0C):
+						kvProp.val8 = ReadBool(*fs);
+						break;
+
+
+					case (0xED804665):
+						kvProp.val32 = ReadUInt32(*fs);
+						break;
+					case (0xF4BC48C2):
+						kvProp.val8 = ReadBool(*fs);
+						break;
+					case (0xFE8AE38A):
+						kvProp.val32 = ReadUInt32(*fs);
+						break;
+
+					default:
+						std::cout << "\nInvalid KV value. Cannot handle KV stream.";
+						break;
+				}
+				dttNode.kvData.push_back(kvProp);
+			}
 		}
 	}
 
-	void ReadSyncNode() {
+	void ProcessSyncNode() {
 		std::vector<SyncNode> syncNodes;
 		uint32_t numSyncNodes = ReadUInt32(*fs);
 
@@ -104,6 +201,16 @@ public:
 		}
 
 		ReadUInt64(*fs); // 0x0 constant
+	}
+
+	void ProcessDescriptor() {
+		std::vector<std::string> descriptors;
+		uint32_t numDescs = ReadUInt32(*fs);
+		
+		for (int i = 0; i < numDescs; i++) {
+			std::string chars = ReadString(*fs, ReadUInt32(*fs));
+			descriptors.push_back(chars);
+		}
 	}
 
 	void ConstructKVNode() {
@@ -145,12 +252,16 @@ public:
 					break;
 
 				default:
-					kvProp.val32 = ReadUInt32(*fs);
+					std::cout << "\nInvalid KV value. Cannot KV stream.";
 					break;
 			}
 
 			kvProps.push_back(kvProp);
 		}
+	}
+
+	void ProcessSMEvents() {
+		
 	}
 
 	void InitializeStateNode(std::vector<AnimDef>& nodes) {
@@ -163,39 +274,42 @@ public:
 		for (int i = 0; i < totalStateNodes; i++) {
 			uint32_t streamType = ReadUInt32(*fs);
 
-			switch (ntohl(streamType)) {
-				case(KV__):
-					ConstructKVNode();
-					break;
-				case(SYNC):
-					ReadSyncNode();
-					break;
-				case(DTT_):
-					ReadDTTs();
-					break;
-				case(TOVR):
-					//todo RE
-					break;
-				case(NODE):
-					break;
-				case(DESC):
-					break;
-				case(EVNT):
-					break;
+			while (streamType != GRP_) {
+				switch (ntohl(streamType)) {
+					case(KV__):
+						ConstructKVNode();
+						break;
+					case(SYNC):
+						ProcessSyncNode();
+						break;
+					case(DTT_):
+						ProcessDTTs();
+						break;
+					case(TOVR):
+						ProcessDTTs();
+						break;
+					case(NODE):
+						ProcessNode();
+						break;
+					case(DESC):
+						ProcessDescriptor();
+						break;
+					case(EVNT):
+						ProcessSMEvents();
+						break;
+				}
+				streamType = ReadUInt32(*fs);
 			}
 
-		}
+			uint32_t totalGroupNodes = ReadUInt32(*fs);
+			/* Iterate through all Group Nodes. Assess stream formats*/
+			for (int i = 0; i < totalGroupNodes; i++) {
+				uint32_t streamType = ReadUInt32(*fs);
 
-		uint32_t groupNodeSig = ReadUInt32(*fs);
-		uint32_t totalGroupNodes = ReadUInt32(*fs);
-
-		/* Iterate through all Group Nodes. Assess stream formats*/
-		for (int i = 0; i < totalGroupNodes; i++) {
-			uint32_t streamType = ReadUInt32(*fs);
-
-			switch (streamType) {
-			case(DESC):
-				break;
+				switch (streamType) {
+					case(DESC):
+						break;
+				}
 			}
 		}
 	}
