@@ -29,7 +29,10 @@
     <ClInclude Include="AnimDefHandler.h">
       <Filter>Header Files\Definitions</Filter>
     </ClInclude>
-    <ClInclude Include="DefsReader.h">
+    <ClInclude Include="C_DefStream.h">
+      <Filter>Header Files\Definitions</Filter>
+    </ClInclude>
+    <ClInclude Include="C_StateNode.h">
       <Filter>Header Files\Definitions</Filter>
     </ClInclude>
   </ItemGroup>

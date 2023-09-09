@@ -1,49 +1,15 @@
 /* Initializes a C++ object utilizing animation ProjectBin files */
-#include "DefsReader.h"
+#include "C_StateNode.h"
 #pragma comment(lib, "Ws2_32.lib")
 #pragma once
 
 using namespace DefNode;
+using namespace StateNode;
 using namespace std;
 using namespace BinaryIO;
 
 class ADefHandler
 {
-
-	struct EventNode {
-		std::vector<uint64_t> triggers;
-		std::vector<uint32_t> arguments;
-	};
-
-	struct MemberNode {
-		std::vector<uint32_t> frames;
-		std::vector<uint64_t> candidates;
-	};
-
-	struct GroupNode {
-		std::vector<std::string> groupDescriptors;
-		std::vector<MemberNode> members;
-		std::vector<MemberNode> selectors;
-	};
-
-	struct kvProperty {
-		uint32_t value;
-		std::string kvString;
-		bool unkBool;
-	};
-
-	struct AnimDef {
-		
-		uint32_t streamType; // Differentiates DTT, Node, GroupNode &, EventNode types
-		std::vector<kvProperty> kvData;
-		uint32_t syncValue;
-		std::vector<AnimDef> dttNodes;
-		uint32_t tovrValue;
-		std::vector<AnimDef> nodes;
-		std::vector<std::string> descriptors;
-		std::vector<GroupNode> groupNodes;
-
-	};
 
 	struct DefArg {
 		std::string name;
@@ -74,7 +40,7 @@ public:
 		DESC = 0x64657363,
 		CMDS = 0x636D6473,
 		STMR = 0x73746D72,
-		ADEF = 0x66656461
+		ADEF = 0x61646566
 	};
 
 	ADefHandler(const char* filePath) {
@@ -108,54 +74,6 @@ public:
 	}
 
 private:
-
-	enum {
-		STAT = 0x74617473,
-		KV__ = 0x5F5F766B,
-		SYNC = 0x636E7973,
-		DTT_ = 0x5F747464,
-		TOVR = 0x72766F74,
-		NODE = 0x65646F6E,
-		DESC = 0x63736564,
-		EVNT = 0x746E7665,
-		TRIG = 0x67697274,
-		ARGS = 0x73677261,
-		GRP_ = 0x5F707267,
-		MEMB = 0x626D656D,
-		FRMS = 0x736D7266,
-		CAND = 0x646E6163,
-		SELS = 0x736C6573
-	};
-
-	void ConstructStateNode(std::vector<AnimDef>& nodes) {
-		
-		uint32_t stateNodeSig = ReadUInt32(*fs);
-		uint32_t totalStateNodes = ReadUInt32(*fs);
-
-		/* Iterate through all State Nodes. Assess stream format*/
-		for (int i = 0; i < totalStateNodes; i++) {
-			uint32_t streamType = ReadUInt32(*fs);
-
-			switch (streamType) {
-				case(KV__):
-					break;
-			}
-
-		}
-
-		uint32_t groupNodeSig = ReadUInt32(*fs);
-		uint32_t totalGroupNodes = ReadUInt32(*fs);
-
-		/* Iterate through all Group Nodes. Assess stream formats*/
-		for (int i = 0; i < totalGroupNodes; i++) {
-			uint32_t streamType = ReadUInt32(*fs);
-
-			switch (streamType) {
-			case(DESC):
-				break;
-			}
-		}
-	}
 
 	void LoadArguments(int size) {
 		/* Reads all binary arguments. Stores in argument array */
@@ -248,7 +166,8 @@ private:
 		std::vector<AnimDef> aDefNodes;
 
 		for (int i = 0; i < size; i++) {
-			ConstructStateNode(aDefNodes);
+			C_StateNode newStateNode(fs);
+			newStateNode.InitializeStateNode(aDefNodes);
 		}
 	}
 
