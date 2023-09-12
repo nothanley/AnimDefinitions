@@ -169,6 +169,8 @@ private:
 			C_StateNode newStateNode(fs);
 			newStateNode.InitializeStateNode(aDefNodes);
 		}
+
+		std::cout << "\n function end";
 	}
 
 	/* Interprets all binary streams within animdef */

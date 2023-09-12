@@ -87,10 +87,15 @@ public:
 		std::vector<AnimDef> nodeArray;
 		uint32_t numNodes = ReadUInt32(*fs);
 
+		if (numNodes > 1) {
+			std::cout << "debug test";
+		}
+
 		for (int i = 0; i < numNodes; i++) {
 			AnimDef node;
 			node.streamType = NODE;
 			node.flag = ReadBool(*fs);
+			if (node.flag) { ReadShort(*fs); ReadByte(*fs); } // TODO
 
 			ReadUInt32(*fs); // Init KVs
 			uint32_t numKVs = ReadUInt32(*fs);
@@ -116,6 +121,11 @@ public:
 						kvProp.val64 = ReadUInt64(*fs);
 						break;
 
+					case (0x3A823F0C):
+						//TODO
+						kvProp.val8 = ReadBool(*fs);
+						break;
+
 
 					case (0xCF0D984C):
 						kvProp.valFloat = ReadFloat(*fs);
@@ -131,7 +141,8 @@ public:
 						break;
 
 					default:
-						std::cout << "\nInvalid KV value. Cannot handle KV stream.";
+						std::cout << fs->tellg();
+						std::cout << "\nInvalid KV value. Cannot KV stream.";
 						break;
 				}
 				node.kvData.push_back(kvProp);
@@ -182,7 +193,8 @@ public:
 						break;
 
 					default:
-						std::cout << "\nInvalid KV value. Cannot handle KV stream.";
+						std::cout << fs->tellg();
+						std::cout << "\nInvalid KV value. Cannot KV stream.";
 						break;
 				}
 				dttNode.kvData.push_back(kvProp);
@@ -198,6 +210,7 @@ public:
 			SyncNode sNode;
 			sNode.valueA = ReadUInt64(*fs);
 			sNode.valueB = ReadUInt64(*fs);
+			sNode.flag = ReadBool(*fs);
 		}
 
 		ReadUInt64(*fs); // 0x0 constant
@@ -252,6 +265,7 @@ public:
 					break;
 
 				default:
+					std::cout << fs->tellg();
 					std::cout << "\nInvalid KV value. Cannot KV stream.";
 					break;
 			}
@@ -260,8 +274,109 @@ public:
 		}
 	}
 
+	void ReadEventArguments() {
+		ReadUInt32(*fs); //  0xARGS
+		uint32_t numArgs = ReadUInt32(*fs);
+		for (int i = 0; i < numArgs; i++) {
+			uint16_t argIdx = ReadUShort(*fs);
+		}
+	}
+
+	void ReadEventTriggers() {
+		ReadUInt32(*fs); // 0xTRIGS
+		uint32_t numTriggers = ReadUInt32(*fs);
+		for (int i = 0; i < numTriggers; i++) {
+			uint64_t unkVal1 = ReadUInt64(*fs);
+			float unkFloat1 = ReadFloat(*fs);
+		}
+	}
+	
 	void ProcessSMEvents() {
-		
+		std::vector<EventNode> events;
+		uint32_t numEvents = ReadUInt32(*fs);
+
+		for (int i = 0; i < numEvents; i++) {
+			uint64_t unkVal1 = ReadUInt64(*fs);
+			uint32_t unkVal2 = ReadUInt32(*fs);
+			bool flag = ReadBool(*fs);
+
+			if (!flag) {
+				uint32_t unkVal3 = ReadUInt32(*fs);
+				uint64_t unkVal4 = ReadUInt64(*fs);
+			}
+
+			ReadEventTriggers();
+			ReadEventArguments();
+		}
+	}
+	
+	void ReadFRMSStream() {
+		ReadUInt32(*fs);
+		uint32_t numFrames = ReadUInt32(*fs);
+
+		for (int i = 0; i < numFrames; i++) {
+			uint64_t unkVal1 = ReadUInt64(*fs);
+			bool flag = ReadBool(*fs);
+		}
+	}
+
+	void ReadCandStream( uint32_t candidateEncoding ) {
+		ReadUInt32(*fs);
+		uint32_t numCands = ReadUInt32(*fs);
+		for (int i = 0; i < numCands; i++) {
+			uint64_t unkVal1 = ReadUInt64(*fs);
+			bool flag = ReadBool(*fs);
+		}
+
+		switch (ntohl(candidateEncoding)) {
+			case(0xEB7AD409):
+				for (int i = 0; i < numCands; i++) {
+					ReadFloat(*fs);
+					ReadFloat(*fs);
+				}
+				ReadUInt32(*fs);
+				break;
+			case(0xF342C816):
+				break;
+			case(0x76A50FDC):
+				ReadUInt64(*fs);
+				ReadBool(*fs);
+				break;
+			case(0x4BFF8647):
+				for (int i = 0; i < numCands; i++) {
+					ReadFloat(*fs);
+				}
+				ReadBool(*fs);
+				break;
+			default:
+				std::cout << fs->tellg();
+				std::cout << "\nCould not read cand node.";
+				break;
+		}
+	}
+
+	void ProcessMembers() {
+		uint32_t numMembs = ReadUInt32(*fs);
+		uint32_t selType;
+
+		for (int i = 0; i < numMembs; i++)
+			uint64_t unkVal1 = ReadUInt64(*fs);
+
+		selType = ReadUInt32(*fs);
+
+		ReadFRMSStream();
+		ReadCandStream(selType);
+	}
+
+	void ProcessSelectors() {
+		uint32_t numSels = ReadUInt32(*fs);
+		uint32_t selType;
+
+		for (int i = 0; i < numSels; i++) {
+			selType = ReadUInt32(*fs);
+			ReadFRMSStream();
+			ReadCandStream(selType); 
+		}
 	}
 
 	void InitializeStateNode(std::vector<AnimDef>& nodes) {
@@ -274,7 +389,7 @@ public:
 		for (int i = 0; i < totalStateNodes; i++) {
 			uint32_t streamType = ReadUInt32(*fs);
 
-			while (streamType != GRP_) {
+			while (ntohl(streamType) != GRP_) {
 				switch (ntohl(streamType)) {
 					case(KV__):
 						ConstructKVNode();
@@ -297,20 +412,31 @@ public:
 					case(EVNT):
 						ProcessSMEvents();
 						break;
+					default:
+						std::cout << fs->tellg();
+						std::cout << "\nUnknown Node Stream.";
+						break;
 				}
 				streamType = ReadUInt32(*fs);
 			}
+		}
 
-			uint32_t totalGroupNodes = ReadUInt32(*fs);
-			/* Iterate through all Group Nodes. Assess stream formats*/
-			for (int i = 0; i < totalGroupNodes; i++) {
-				uint32_t streamType = ReadUInt32(*fs);
+		if (totalStateNodes == 0) { ReadUInt32(*fs); }
+		uint32_t totalGroupNodes = ReadUInt32(*fs);
 
-				switch (streamType) {
-					case(DESC):
-						break;
-				}
-			}
+		/* Iterate through all Group Nodes. Assess stream formats*/
+		for (int i = 0; i < totalGroupNodes; i++) {
+			std::string grpString = ReadString(*fs, ReadUInt32(*fs));
+
+			uint32_t streamType = ReadUInt32(*fs);
+			ProcessDescriptor();
+
+			streamType = ReadUInt32(*fs);
+			ProcessMembers();
+
+			streamType = ReadUInt32(*fs);
+			ProcessSelectors();
+
 		}
 	}
 
