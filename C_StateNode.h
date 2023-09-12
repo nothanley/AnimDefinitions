@@ -82,16 +82,89 @@ public:
 		CAND = 0x646E6163,
 		SELS = 0x736C6573
 	};
+	
+	void ProcessBargStream() {
+		ReadUInt32(*fs);
+		uint32_t numBargs = ReadUInt32(*fs);
+		uint64_t unkVal1 = ReadUInt64(*fs);
+		float unkFloat = ReadFloat(*fs);
+		uint16_t unkFlag = ReadUShort(*fs);
+
+		for (int k = 0; k < unkFlag; k++) {
+			if (unkFlag > 1) {
+				std::cout << "";
+			}
+			ReadUShort(*fs);
+			ReadBool(*fs);
+		}
+
+		for (int j = 0; j < numBargs; j++) {
+			ReadUInt32(*fs); // Init KVs
+			uint32_t numKVs = ReadUInt32(*fs);
+
+			for (int k = 0; k < numKVs; k++) {
+				kvProperty kvProp;
+				kvProp.streamSig = ReadUInt32(*fs);
+
+				switch (kvProp.streamSig) {
+					case (0xC748D578):
+						kvProp.val32 = ReadUInt32(*fs);
+						break;
+					case (0x42CB2C8):
+						kvProp.valFloat = ReadFloat(*fs);
+						break;
+					case (0x6F1A9819):
+						kvProp.valFloat = ReadFloat(*fs);
+						break;
+					case (0x8C103F9E):
+						kvProp.chars = ReadString(*fs, ReadUInt32(*fs));
+						break;
+					case (0x8E0B4BDF):
+						kvProp.val64 = ReadUInt64(*fs);
+						break;
+
+
+					case (0xCF0D984C):
+						kvProp.valFloat = ReadFloat(*fs);
+						break;
+					case (0xE39D3DA5):
+						kvProp.valFloat = ReadFloat(*fs);
+						break;
+					case (0xF43A2E0A):
+						kvProp.val8 = ReadBool(*fs);
+						break;
+					case (0xFDF783BE):
+						kvProp.chars = ReadString(*fs, ReadUInt32(*fs));
+						break;
+
+						//Node Type 0x2
+					case (0x3A823F0C):
+						kvProp.val8 = ReadBool(*fs);
+						break;
+
+					default:
+						std::cout << fs->tellg();
+						std::cout << "\nInvalid KV value. Cannot KV stream.";
+						break;
+				}
+				/*node.kvData.push_back(kvProp);*/
+			}
+
+			if (numBargs > 0x1 && (j+1) != numBargs) {
+				uint64_t unkVal3 = ReadUInt64(*fs);
+				float unkFloat = ReadFloat(*fs);
+				bool unkFlag = ReadBool(*fs);
+				uint32_t unkVal4 = ReadUInt32(*fs);
+			}
+		}
+
+	}
 
 	void ProcessNode() {
 		std::vector<AnimDef> nodeArray;
 		uint32_t numNodes = ReadUInt32(*fs);
 
-		if (numNodes > 1) {
-			std::cout << "debug test";
-		}
-
-		for (int i = 0; i < numNodes; i++) {
+		for (int i = 0; i < 0x1; i++) {
 			AnimDef node;
 			node.streamType = NODE;
 			node.flag = ReadBool(*fs);
@@ -121,11 +194,6 @@ public:
 						kvProp.val64 = ReadUInt64(*fs);
 						break;
 
-					case (0x3A823F0C):
-						//TODO
-						kvProp.val8 = ReadBool(*fs);
-						break;
-
 
 					case (0xCF0D984C):
 						kvProp.valFloat = ReadFloat(*fs);
@@ -140,12 +208,25 @@ public:
 						kvProp.chars = ReadString(*fs, ReadUInt32(*fs));
 						break;
 
+					//Node Type 0x2
+					case (0x3A823F0C):
+						kvProp.val8 = ReadBool(*fs);
+						break;
+
 					default:
 						std::cout << fs->tellg();
 						std::cout << "\nInvalid KV value. Cannot KV stream.";
 						break;
-				}
-				node.kvData.push_back(kvProp);
+					}
+					node.kvData.push_back(kvProp);
+			}
+			
+			if (numNodes == 0x2) {
+				uint64_t unkVal3 = ReadUInt64(*fs);
+				float unkFloat = ReadFloat(*fs);
+
+				//barg stream??
+				ProcessBargStream();
 			}
 		}
 	}
@@ -346,6 +427,22 @@ public:
 				for (int i = 0; i < numCands; i++) {
 					ReadFloat(*fs);
 				}
+				ReadBool(*fs);
+				break;
+			case(0x2F05210F):
+				for (int i = 0; i < numCands; i++) {
+					ReadUShort(*fs);
+					ReadFloat(*fs);
+					ReadFloat(*fs);
+				}
+				ReadUInt64(*fs);
+				ReadBool(*fs);
+				break;
+			case(0x1A8AECAF):
+				for (int i = 0; i < numCands; i++) {
+					ReadUShort(*fs);
+				}
+				ReadUInt64(*fs);
 				ReadBool(*fs);
 				break;
 			default:
