@@ -84,16 +84,15 @@ public:
 	};
 	
 	void ProcessBargStream() {
+		// Super hacky. Fix this.
 		ReadUInt32(*fs);
 		uint32_t numBargs = ReadUInt32(*fs);
 		uint64_t unkVal1 = ReadUInt64(*fs);
 		float unkFloat = ReadFloat(*fs);
 		uint16_t unkFlag = ReadUShort(*fs);
-
+		
+		std::vector<bool> flagMap;
 		for (int k = 0; k < unkFlag; k++) {
-			if (unkFlag > 1) {
-				std::cout << "";
-			}
 			ReadUShort(*fs);
 			ReadBool(*fs);
 		}
@@ -148,13 +147,21 @@ public:
 						break;
 				}
 				/*node.kvData.push_back(kvProp);*/
+
+				if (unkFlag > 1) {
+					std::cout << "";
+					j++;
+				}
 			}
 
 			if (numBargs > 0x1 && (j+1) != numBargs) {
 				uint64_t unkVal3 = ReadUInt64(*fs);
 				float unkFloat = ReadFloat(*fs);
-				bool unkFlag = ReadBool(*fs);
-				uint32_t unkVal4 = ReadUInt32(*fs);
+
+				if (unkFlag != 0x2) {
+					bool unkFlag2 = ReadBool(*fs);
+					uint32_t unkVal4 = ReadUInt32(*fs);
+				}
 			}
 		}
 
