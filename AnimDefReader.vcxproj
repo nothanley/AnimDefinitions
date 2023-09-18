@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AnimDefReader.cpp" />
+    <ClCompile Include="C_StateNode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\AnimsWrapper\Utilities\BinaryIO.h" />

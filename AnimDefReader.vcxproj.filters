@@ -21,6 +21,9 @@
     <ClCompile Include="AnimDefReader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C_StateNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\AnimsWrapper\Utilities\BinaryIO.h">

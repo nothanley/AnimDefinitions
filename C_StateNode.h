@@ -86,164 +86,33 @@ public:
 		SELS = 0x736C6573
 	};
 	
-	void ReadNodeType1() {
-		bool nodeFlag = ReadBool(*fs);
-		uint32_t streamSig = ReadUInt32(*fs); // Init KVs
-		uint32_t numKVs = ReadUInt32(*fs);
+	void InitializeStateNode(std::vector<AnimDef>& nodes);
+	AnimDef ReadNodeType1();
+	AnimDef ReadNodeType2();
+	std::vector<AnimDef> ProcessDTTs();
+	std::vector<kvProperty> ReadKeyValueProperty(bool isNodeValue);
+	void ReadCandStream(uint32_t candidateEncoding);
 
-		for (int i = 0; i < numKVs; i++) {
-			kvProperty kvProp;
-			kvProp.streamSig = ReadUInt32(*fs);
-
-			switch (kvProp.streamSig) {
-				case (0xC748D578):
-					kvProp.val32 = ReadUInt32(*fs);
-					break;
-				case (0x42CB2C8):
-					kvProp.valFloat = ReadFloat(*fs);
-					break;
-				case (0x6F1A9819):
-					kvProp.valFloat = ReadFloat(*fs);
-					break;
-				case (0x8C103F9E):
-					kvProp.chars = ReadString(*fs, ReadUInt32(*fs));
-					break;
-				case (0x8E0B4BDF):
-					kvProp.val64 = ReadUInt64(*fs);
-					break;
-
-
-				case (0xCF0D984C):
-					kvProp.valFloat = ReadFloat(*fs);
-					break;
-				case (0xE39D3DA5):
-					kvProp.valFloat = ReadFloat(*fs);
-					break;
-				case (0xF43A2E0A):
-					kvProp.val8 = ReadBool(*fs);
-					break;
-				case (0xFDF783BE):
-					kvProp.chars = ReadString(*fs, ReadUInt32(*fs));
-					break;
-
-				default:
-					std::cout << fs->tellg();
-					std::cout << "\nInvalid KV value. Cannot KV stream.";
-					break;
-			}
-		}
-		
-	}
-
-	void ReadNodeType2() {
-		int32_t nodeFlag = ReadSInt32(*fs);
-		uint32_t streamSig = ReadUInt32(*fs);
-		uint32_t numKVs = ReadUInt32(*fs);
-
-		for (int i = 0; i < numKVs; i++) {
-			kvProperty kvProp;
-			kvProp.streamSig = ReadUInt32(*fs);
-
-			switch (kvProp.streamSig) {
-				case (0x3A823F0C):
-					kvProp.val8 = ReadBool(*fs);
-					break;
-				case (0x8E0B4BDF):
-					kvProp.val64 = ReadUInt64(*fs);
-					break;
-				case (0xFDF783BE):
-					kvProp.chars = ReadString(*fs, ReadUInt32(*fs));
-					break;
-
-				default:
-					std::cout << fs->tellg();
-					std::cout << "\nInvalid KV value. Cannot KV stream.";
-					break;	}
-		}
-
-		uint64_t unkVal64 = ReadUInt64(*fs);
-		float unkFloat = ReadFloat(*fs);
-
-		//Process 'BARG' stream
-		uint32_t bargSig = ReadUInt32(*fs);
-		uint32_t numBargs = ReadUInt32(*fs);
-
-		for (int i = 0; i < numBargs; i++) {
-			uint64_t unkVal64 = ReadUInt64(*fs);
-			float unkFloat = ReadFloat(*fs);
-			ProcessNode();
-		}
-	}
-
-	void ProcessNode() {
+	AnimDef ProcessNode() {
+		AnimDef parentNode{ NODE };
 		uint32_t nodeType = ReadUInt32(*fs);
 
 		switch (nodeType) {
 			case(0x2):
-				ReadNodeType2();
+				parentNode.nodes.push_back(ReadNodeType2());
 				break;
 			case(0x1):
-				ReadNodeType1();
+				parentNode.nodes.push_back(ReadNodeType1());
 				break;
 			default:
 				std::cout << "\nInvalid stream type.";
 				break;
 		}
+		return parentNode;
 	}
 
-	void ProcessDTTs() {
-		std::vector<AnimDef> dttArray;
-		uint32_t numDTTs = ReadUInt32(*fs);
-
-		for (int i = 0; i < numDTTs; i++) {
-			AnimDef dttNode;
-			dttNode.streamType = DTT_;
-
-			ReadUInt32(*fs); // Init KVs
-			uint32_t numKVs = ReadUInt32(*fs);
-			for (int j = 0; j < numKVs; j++) {
-				kvProperty kvProp;
-				kvProp.streamSig = ReadUInt32(*fs);
-
-				switch (kvProp.streamSig) {
-					case (0xDADA2544):
-						kvProp.val32 = ReadUInt32(*fs);
-						break;
-					case (0x11D9945):
-						kvProp.chars = ReadString(*fs, ReadUInt32(*fs));
-						break;
-					case (0x813DE48):
-						kvProp.val8 = ReadBool(*fs);
-						break;
-					case (0x33DEED73):
-						kvProp.val64 = ReadUInt64(*fs);
-						break;
-					case (0x3A823F0C):
-						kvProp.val8 = ReadBool(*fs);
-						break;
-
-
-					case (0xED804665):
-						kvProp.val32 = ReadUInt32(*fs);
-						break;
-					case (0xF4BC48C2):
-						kvProp.val8 = ReadBool(*fs);
-						break;
-					case (0xFE8AE38A):
-						kvProp.val32 = ReadUInt32(*fs);
-						break;
-
-					default:
-						std::cout << fs->tellg();
-						std::cout << "\nInvalid KV value. Cannot KV stream.";
-						break;
-				}
-				dttNode.kvData.push_back(kvProp);
-			}
-		}
-	}
-
-	void ProcessSyncNode() {
+	
+	std::vector<SyncNode> ProcessSyncNode() {
 		std::vector<SyncNode> syncNodes;
 		uint32_t numSyncNodes = ReadUInt32(*fs);
 
@@ -255,9 +124,10 @@ public:
 		}
 
 		ReadUInt64(*fs); // 0x0 constant
+		return syncNodes;
 	}
 
-	void ProcessDescriptor() {
+	std::vector<std::string> ProcessDescriptor() {
 		std::vector<std::string> descriptors;
 		uint32_t numDescs = ReadUInt32(*fs);
 		
@@ -265,54 +135,7 @@ public:
 			std::string chars = ReadString(*fs, ReadUInt32(*fs));
 			descriptors.push_back(chars);
 		}
-	}
-
-	void ConstructKVNode() {
-		std::vector<kvProperty> kvProps;
-		uint32_t numKVs = ReadUInt32(*fs);
-
-		for (int i = 0; i < numKVs; i++) {
-			kvProperty kvProp;
-			kvProp.streamSig = ReadUInt32(*fs);
-
-			// KV value indicates encoding. Document all todos.
-			switch (ntohl(kvProp.streamSig)) {
-				
-				case (0x46C0C6BF):
-					kvProp.val8 = ReadBool(*fs);
-					break;
-				case (0xA8FA930E):
-					kvProp.val8 = ReadBool(*fs);
-					break;
-				case (0x4D245F2B):
-					kvProp.val8 = ReadBool(*fs);
-					break;
-				case (0x6782648B):
-					kvProp.val8 = ReadBool(*fs);
-					break;
-				case (0xDF4B0B8E):
-					kvProp.chars = ReadString(*fs, ReadUInt32(*fs));
-					break;
-
-
-				case (0x60C09DC4):
-					kvProp.val8 = ReadBool(*fs);
-					break;
-				case (0xA6D0A4EB):
-					kvProp.val8 = ReadBool(*fs);
-					break;
-				case (0x5D651EEF):
-					kvProp.val8 = ReadBool(*fs);
-					break;
-
-				default:
-					std::cout << fs->tellg();
-					std::cout << "\nInvalid KV value. Cannot KV stream.";
-					break;
-			}
-
-			kvProps.push_back(kvProp);
-		}
+		return descriptors;
 	}
 
 	void ReadEventArguments() {
@@ -361,57 +184,6 @@ public:
 		}
 	}
 
-	void ReadCandStream( uint32_t candidateEncoding ) {
-		ReadUInt32(*fs);
-		uint32_t numCands = ReadUInt32(*fs);
-		for (int i = 0; i < numCands; i++) {
-			uint64_t unkVal1 = ReadUInt64(*fs);
-			bool flag = ReadBool(*fs);
-		}
-
-		switch (ntohl(candidateEncoding)) {
-			case(0xEB7AD409):
-				for (int i = 0; i < numCands; i++) {
-					ReadFloat(*fs);
-					ReadFloat(*fs);
-				}
-				ReadUInt32(*fs);
-				break;
-			case(0xF342C816):
-				break;
-			case(0x76A50FDC):
-				ReadUInt64(*fs);
-				ReadBool(*fs);
-				break;
-			case(0x4BFF8647):
-				for (int i = 0; i < numCands; i++) {
-					ReadFloat(*fs);
-				}
-				ReadBool(*fs);
-				break;
-			case(0x2F05210F):
-				for (int i = 0; i < numCands; i++) {
-					ReadUShort(*fs);
-					ReadFloat(*fs);
-					ReadFloat(*fs);
-				}
-				ReadUInt64(*fs);
-				ReadBool(*fs);
-				break;
-			case(0x1A8AECAF):
-				for (int i = 0; i < numCands; i++) {
-					ReadUShort(*fs);
-				}
-				ReadUInt64(*fs);
-				ReadBool(*fs);
-				break;
-			default:
-				std::cout << fs->tellg();
-				std::cout << "\nCould not read cand node.";
-				break;
-		}
-	}
-
 	void ProcessMembers() {
 		uint32_t numMembs = ReadUInt32(*fs);
 		uint32_t selType;
@@ -436,69 +208,6 @@ public:
 		}
 	}
 
-	void InitializeStateNode(std::vector<AnimDef>& nodes) {
-		// Reads all state nodes in adef stream. 
-		// TODO: Cleanup. This works, but could flow better.
-
-		AnimDef adefNode;
-		uint32_t stateNodeSig = ReadUInt32(*fs);
-		uint32_t totalStateNodes = ReadUInt32(*fs);
-
-		/* Iterate through all State Nodes. Assess stream format*/
-		for (int i = 0; i < totalStateNodes;) {
-			uint32_t streamType = ReadUInt32(*fs);
-
-			while (ntohl(streamType) != GRP_) {
-				switch (ntohl(streamType)) {
-					case(KV__):
-						ConstructKVNode();
-						break;
-					case(SYNC):
-						ProcessSyncNode();
-						i++;
-						break;
-					case(DTT_):
-						ProcessDTTs();
-						break;
-					case(TOVR):
-						ProcessDTTs();
-						break;
-					case(NODE):
-						ProcessNode();
-						break;
-					case(DESC):
-						ProcessDescriptor();
-						break;
-					case(EVNT):
-						ProcessSMEvents();
-						break;
-					default:
-						std::cout << fs->tellg();
-						std::cout << "\nUnknown Node Stream.";
-						break;
-				}
-				streamType = ReadUInt32(*fs);
-			}
-		}
-
-		if (totalStateNodes == 0) { ReadUInt32(*fs); }
-		uint32_t totalGroupNodes = ReadUInt32(*fs);
-
-		/* Iterate through all Group Nodes. Assess stream formats*/
-		for (int i = 0; i < totalGroupNodes; i++) {
-			std::string grpString = ReadString(*fs, ReadUInt32(*fs));
-
-			uint32_t streamType = ReadUInt32(*fs);
-			ProcessDescriptor();
-
-			streamType = ReadUInt32(*fs);
-			ProcessMembers();
-
-			streamType = ReadUInt32(*fs);
-			ProcessSelectors();
-
-		}
-	}
 
 };
 
