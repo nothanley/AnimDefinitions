@@ -38,5 +38,8 @@
     <ClInclude Include="C_StateNode.h">
       <Filter>Header Files\Definitions</Filter>
     </ClInclude>
+    <ClInclude Include="C_AnimNodes.h">
+      <Filter>Header Files\Definitions</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

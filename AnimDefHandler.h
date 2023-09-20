@@ -163,7 +163,7 @@ private:
 	}
 
 	void LoadAnimDef(int size) {
-		std::vector<AnimDef> aDefNodes;
+		std::vector<Node> aDefNodes;
 
 		for (int i = 0; i < size; i++) {
 			C_StateNode newStateNode(fs);
