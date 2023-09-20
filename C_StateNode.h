@@ -13,8 +13,6 @@ class C_StateNode
 private:
 	std::istream* fs;
 
-	void InitializeStateNode(std::vector<Node>& nodes);
-
 	std::vector<KeyValueProp> ReadKeyValueProperty(bool isNodeValue);
 
 	Node ReadNodeType1();
@@ -49,6 +47,6 @@ public:
 		this->fs = binaryStream;
 	}
 
-
+	void InitializeStateNode(std::vector<Node>& nodes);
 };
 

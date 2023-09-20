@@ -22,15 +22,6 @@ namespace StateNode {
 		SELS = 0x736C6573
 	};
 
-	struct Node {
-		uint32_t nodeType; // Differentiates DTT, Node, GroupNode &, EventNode types
-		std::vector<KeyValueProp> kvProps;
-		std::vector<Node> transNodes;
-		std::vector<Node> nodes;
-		std::vector<std::string> descriptors;
-		std::vector<GroupNode> groupNodes;
-	};
-
 	struct KeyValueProp {
 		uint32_t streamKey;
 		std::string chars;
@@ -64,5 +55,15 @@ namespace StateNode {
 		std::vector<MemberNode> selectors;
 	};
 
+	struct Node {
+		uint32_t nodeType; // Differentiates DTT, Node, GroupNode &, EventNode types
+		std::vector< std::vector<KeyValueProp> > keyValueProperties;
+		std::vector< std::vector<SyncNode> > syncNodes;
+		std::vector< std::vector<Node> > transNodes;
+		std::vector< std::vector<Node> > ovlyNodes;
+		std::vector<Node> childNodes;
+		std::vector<std::string> descriptors;
+		std::vector<GroupNode> groupNodes;
+	};
 
 };

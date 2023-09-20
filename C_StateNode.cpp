@@ -15,20 +15,20 @@ void C_StateNode::InitializeStateNode(std::vector<Node>& nodes)
 		while (ntohl(streamType) != GRP_) {
 			switch (ntohl(streamType)) {
 				case(KV__):
-					stateNode.kvProps = ReadKeyValueProperty(false);
+					stateNode.keyValueProperties.push_back( ReadKeyValueProperty(false) );
 					break;
 				case(SYNC):
-					ProcessSyncNode();
+					stateNode.syncNodes.push_back( ProcessSyncNode() );
 					i++;
 					break;
 				case(DTT_):
-					ProcessDTTs();
+					stateNode.transNodes.push_back( ProcessDTTs() );
 					break;
 				case(TOVR):
-					ProcessDTTs();
+					stateNode.ovlyNodes.push_back( ProcessDTTs() );
 					break;
 				case(NODE):
-					stateNode.nodes.push_back( ProcessNode() );
+					stateNode.childNodes.push_back( ProcessNode() );
 					break;
 				case(DESC):
 					stateNode.descriptors = ProcessDescriptor();
@@ -70,7 +70,7 @@ Node C_StateNode::ReadNodeType1()
 	Node animNode{ NODE };
 	bool nodeFlag = ReadBool(*fs);
 	uint32_t streamSig = ReadUInt32(*fs);
-	animNode.kvProps = ReadKeyValueProperty(true);
+	animNode.keyValueProperties.push_back( ReadKeyValueProperty(true) );
 	return animNode;
 }
 
@@ -79,7 +79,7 @@ Node C_StateNode::ReadNodeType2()
 	Node animNode{ NODE };
 	int32_t nodeFlag = ReadSInt32(*fs);
 	uint32_t streamSig = ReadUInt32(*fs);
-	animNode.kvProps = ReadKeyValueProperty(true);
+	animNode.keyValueProperties.push_back(ReadKeyValueProperty(true));
 
 	uint64_t unkVal64 = ReadUInt64(*fs);
 	float unkFloat = ReadFloat(*fs);
@@ -91,7 +91,7 @@ Node C_StateNode::ReadNodeType2()
 	for (int i = 0; i < numBargs; i++) {
 		uint64_t unkVal64 = ReadUInt64(*fs);
 		float unkFloat = ReadFloat(*fs);
-		animNode.nodes.push_back( ProcessNode() );
+		animNode.childNodes.push_back( ProcessNode() );
 	}
 	return animNode;
 }
@@ -104,7 +104,7 @@ std::vector<Node> C_StateNode::ProcessDTTs()
 	for (int i = 0; i < numDTTs; i++) {
 		Node dttNode{ DTT_ };
 		uint32_t blockType = ReadUInt32(*fs);
-		dttNode.kvProps = ReadKeyValueProperty(false);
+		dttNode.keyValueProperties.push_back(ReadKeyValueProperty(false));
 	}
 	return dttArray;
 }
@@ -272,10 +272,10 @@ Node C_StateNode::ProcessNode()
 
 	switch (nodeType) {
 	case(0x2):
-		parentNode.nodes.push_back(ReadNodeType2());
+		parentNode.childNodes.push_back(ReadNodeType2());
 		break;
 	case(0x1):
-		parentNode.nodes.push_back(ReadNodeType1());
+		parentNode.childNodes.push_back(ReadNodeType1());
 		break;
 	default:
 		std::cout << "\nInvalid stream type.";
