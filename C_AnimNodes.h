@@ -50,7 +50,8 @@ namespace StateNode {
 	};
 
 	struct GroupNode {
-		std::vector<std::string> groupDescriptors;
+		std::string chars;
+		std::vector<std::string> descriptors;
 		std::vector<MemberNode> members;
 		std::vector<MemberNode> selectors;
 	};
@@ -58,11 +59,15 @@ namespace StateNode {
 	struct Node {
 		uint32_t nodeType; // Differentiates DTT, Node, GroupNode &, EventNode types
 		std::vector< std::vector<KeyValueProp> > keyValueProperties;
-		std::vector< std::vector<SyncNode> > syncNodes;
-		std::vector< std::vector<Node> > transNodes;
-		std::vector< std::vector<Node> > ovlyNodes;
+		std::vector<SyncNode> syncNodes;
+		std::vector<Node> transNodes;
+		std::vector<Node> ovlyNodes;
 		std::vector<Node> childNodes;
 		std::vector<std::string> descriptors;
+	};
+
+	struct Definition {
+		std::vector<Node> stateNodes;
 		std::vector<GroupNode> groupNodes;
 	};
 

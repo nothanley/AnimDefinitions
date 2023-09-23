@@ -163,11 +163,11 @@ private:
 	}
 
 	void LoadAnimDef(int size) {
-		std::vector<Node> aDefNodes;
+		std::vector<StateNode::Definition> animDefinitions;
 
 		for (int i = 0; i < size; i++) {
 			C_StateNode newStateNode(fs);
-			newStateNode.InitializeStateNode(aDefNodes);
+			newStateNode.InitializeDefinitions(animDefinitions);
 		}
 
 		std::cout << "\n function end";
