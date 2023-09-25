@@ -40,6 +40,9 @@ private:
     void UI_ConstructGroupNode(StateNode::GroupNode group, QTreeWidgetItem *parent);
     void UI_ConstructNewDefinitions(StateNode::Definition animDef);
     void UI_Table_BuildEVNT(StateNode::EventNode event);
+    void UI_Table_BuildMEMB(StateNode::MemberNode member);
+    void UI_Table_BuildCAND(StateNode::Candidate candidate);
+    void UI_Table_BuildFRMS(StateNode::Frame frame);
     std::vector<StateNode::Definition> m_AnimDefinitions;
 };
 

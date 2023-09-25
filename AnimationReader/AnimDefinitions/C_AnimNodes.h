@@ -59,6 +59,7 @@ namespace StateNode {
 	};
 
 	struct Candidate {
+        uint32_t type;
 		uint64_t value;
 		bool flag;
 
@@ -79,7 +80,7 @@ namespace StateNode {
 		std::vector<Frame> frames;
 		std::vector<Candidate> candidates;
 
-		bool encodeFlag;
+        bool encodeFlag = false;
 		uint32_t dValue_0;
 		uint64_t lValue_0;
 	};

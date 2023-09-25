@@ -176,8 +176,8 @@ void C_StateNode::ReadCandStream(StateNode::MemberNode* member)
     uint32_t numCands = ReadUInt32(*fs);
 
     for (int i = 0; i < numCands; i++) {
-		member->candidates.push_back( StateNode::Candidate{
-			ReadUInt64(*fs) ,  ReadBool(*fs) });
+        member->candidates.push_back( StateNode::Candidate{
+                    member->type, ReadUInt64(*fs) ,  ReadBool(*fs) });
     }
 
     switch (ntohl(member->type)) {

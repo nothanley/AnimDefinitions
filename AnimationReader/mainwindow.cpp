@@ -92,18 +92,18 @@ void MainWindow::UI_ConstructGroupNode(StateNode::GroupNode group, QTreeWidgetIt
         DefsTreeWidgetItem *membItem = new DefsTreeWidgetItem(item);
         membItem->setText(0, "MEMB Item");
         membItem->setData(0,Qt::UserRole+1, MEMB );
-        // membItem->setMemberNode(group.members);
+        membItem->setMemberNode(group.members);
         for (const auto &frame :group.members.frames ){
             DefsTreeWidgetItem *frmsItem = new DefsTreeWidgetItem(membItem);
             frmsItem->setText(0, "FRMS Item");
             frmsItem->setData(0,Qt::UserRole+1, FRMS );
-            // frmsItem->setMemberNode(group.members);
+            frmsItem->setFrame(frame);
         }
         for (const auto &candidate :group.members.candidates ){
             DefsTreeWidgetItem *candItem = new DefsTreeWidgetItem(membItem);
             candItem->setText(0, "FRMS Item");
             candItem->setData(0,Qt::UserRole+1, CAND );
-            // candItem->setMemberNode(group.members);
+            candItem->setCandidate(candidate);
         }
     }
 
@@ -116,18 +116,18 @@ void MainWindow::UI_ConstructGroupNode(StateNode::GroupNode group, QTreeWidgetIt
             DefsTreeWidgetItem *membItem = new DefsTreeWidgetItem(selsItem);
             membItem->setText(0, "MEMB Item");
             membItem->setData(0,Qt::UserRole+1, MEMB );
-            // membItem->setMemberNode(group.members);
+            membItem->setMemberNode(member);
             for (const auto &frame :group.members.frames ){
                 DefsTreeWidgetItem *frmsItem = new DefsTreeWidgetItem(membItem);
                 frmsItem->setText(0, "FRMS Item");
                 frmsItem->setData(0,Qt::UserRole+1, FRMS );
-                // frmsItem->setMemberNode(group.members);
+                frmsItem->setFrame(frame);
             }
             for (const auto &candidate :group.members.candidates ){
                 DefsTreeWidgetItem *candItem = new DefsTreeWidgetItem(membItem);
                 candItem->setText(0, "FRMS Item");
                 candItem->setData(0,Qt::UserRole+1, CAND );
-                // candItem->setMemberNode(group.members);
+                candItem->setCandidate(candidate);
             }
         }
     }
@@ -224,6 +224,15 @@ void MainWindow::on_TreeWidget_Defs_itemClicked(QTreeWidgetItem *item, int colum
         case (EVNT):
             UI_Table_BuildEVNT( itemTest->getEventNode() );
             break;
+        case (MEMB):
+            UI_Table_BuildMEMB( itemTest->getMemberNode() );
+            break;
+        case (FRMS):
+            UI_Table_BuildFRMS( itemTest->getFrame() );
+            break;
+        case (CAND):
+            UI_Table_BuildCAND( itemTest->getCandidate() );
+            break;
         default:
             for (const auto& keyValueSet : itemTest->getStateNode().keyValueProperties)
                 for (int i = 0; i < keyValueSet.size(); i++){
@@ -279,6 +288,71 @@ void MainWindow::UI_Table_BuildEVNT(StateNode::EventNode event){
 }
 
 
+void MainWindow::UI_Table_BuildMEMB(StateNode::MemberNode member){
+
+    ui->TableWidget_Defs->setRowCount( 3 );
+    ui->TableWidget_Defs->setItem(0,0, new QTableWidgetItem( "\"value_0\" :" ));
+    ui->TableWidget_Defs->setItem(0,1,new QTableWidgetItem( QString::number(member.dValue_0)) );
+
+    ui->TableWidget_Defs->setItem(1,0, new QTableWidgetItem( "\"value_1\" :" ));
+    ui->TableWidget_Defs->setItem(1,1,new QTableWidgetItem( "\"" + QString::number(member.lValue_0,16) + "\"" ) );
+
+    ui->TableWidget_Defs->setItem(2,0, new QTableWidgetItem( "\"value_2\" :" ));
+    ui->TableWidget_Defs->setItem(2,1,new QTableWidgetItem( member.encodeFlag ? "true" : "false" ) );
+
+
+}
+
+void MainWindow::UI_Table_BuildCAND(StateNode::Candidate candidate){
+
+    switch (ntohl(candidate.type)) {
+        case(0xEB7AD409): //float, float
+            ui->TableWidget_Defs->setRowCount( 2 );
+            ui->TableWidget_Defs->setItem(0,0, new QTableWidgetItem( "\"value_0\" :" ));
+            ui->TableWidget_Defs->setItem(0,1,new QTableWidgetItem(  QString::number(candidate.fValue_0) ) );
+            ui->TableWidget_Defs->setItem(1,0, new QTableWidgetItem( "\"value_1\" :" ));
+            ui->TableWidget_Defs->setItem(1,1,new QTableWidgetItem(  QString::number(candidate.fValue_1) ) );
+            break;
+        case(0xF342C816):
+            break;
+        case(0x76A50FDC): //long, bool
+            ui->TableWidget_Defs->setRowCount( 2 );
+            ui->TableWidget_Defs->setItem(0,0, new QTableWidgetItem( "\"value_0\" :" ));
+            ui->TableWidget_Defs->setItem(0,1,new QTableWidgetItem(  "\"" + QString::number(candidate.value,16) + "\"" ) );
+            ui->TableWidget_Defs->setItem(1,0, new QTableWidgetItem( "\"value_1\" :" ));
+            ui->TableWidget_Defs->setItem(1,1,new QTableWidgetItem(  candidate.flag ? "true" : "false" ));
+            break;
+        case(0x4BFF8647): //float value
+            ui->TableWidget_Defs->setRowCount( 1 );
+            ui->TableWidget_Defs->setItem(0,0, new QTableWidgetItem( "\"value_0\" :" ));
+            ui->TableWidget_Defs->setItem(0,1,new QTableWidgetItem(  QString::number(candidate.fValue_0) ) );
+            break;
+        case(0x2F05210F): // short, float ,float
+            ui->TableWidget_Defs->setRowCount( 3 );
+            ui->TableWidget_Defs->setItem(0,0, new QTableWidgetItem( "\"value_0\" :" ));
+            ui->TableWidget_Defs->setItem(0,1,new QTableWidgetItem(  QString::number(candidate.sValue_0) ) );
+            ui->TableWidget_Defs->setItem(1,0, new QTableWidgetItem( "\"value_1\" :" ));
+            ui->TableWidget_Defs->setItem(1,1,new QTableWidgetItem(  QString::number(candidate.fValue_0) ) );
+            ui->TableWidget_Defs->setItem(2,0, new QTableWidgetItem( "\"value_2\" :" ));
+            ui->TableWidget_Defs->setItem(2,1,new QTableWidgetItem(  QString::number(candidate.fValue_1) ) );
+            break;
+        case(0x1A8AECAF): // short
+            ui->TableWidget_Defs->setRowCount( 1 );
+            ui->TableWidget_Defs->setItem(0,0, new QTableWidgetItem( "\"value_0\" :" ));
+            ui->TableWidget_Defs->setItem(0,1,new QTableWidgetItem(  QString::number(candidate.sValue_0) ) );
+            break;
+        default:
+            break;
+    }
+
+}
+void MainWindow::UI_Table_BuildFRMS(StateNode::Frame frame){
+    ui->TableWidget_Defs->setRowCount(2);
+    ui->TableWidget_Defs->setItem(0,0, new QTableWidgetItem( "\"value_0\" :" ));
+    ui->TableWidget_Defs->setItem(0,1,new QTableWidgetItem(  "\"" + QString::number(frame.value,16) + "\"" ) );
+    ui->TableWidget_Defs->setItem(1,0, new QTableWidgetItem( "\"value_1\" :" ));
+    ui->TableWidget_Defs->setItem(1,1,new QTableWidgetItem(  frame.flag ? "true" : "false" ));
+}
 
 
 
@@ -302,4 +376,6 @@ void MainWindow::on_actionExpand_Collapse_triggered()
     ui->expandcollapseButton->setChecked(!isToggled);
     on_expandcollapseButton_clicked( !isToggled );
 }
+
+
 
