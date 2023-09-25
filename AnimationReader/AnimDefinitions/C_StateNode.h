@@ -13,33 +13,33 @@ class C_StateNode
 private:
 	std::istream* fs;
 
-	std::vector<KeyValueProp> ReadKeyValueProperty(bool isNodeValue);
+	std::vector<KeyValueProp> ReadKeyValueProperty(bool isNodeValue=true);
 
 	Node ReadNodeType1();
 
 	Node ReadNodeType2();
 
-	Node ProcessNode();
+	Node ProcessNode(bool isChild=false);
 
-	std::vector<Node> ProcessDTTs();
+	Node ProcessTransNode();
 
-	void ReadCandStream(uint32_t candidateEncoding);
+    std::vector<SyncNode> ProcessSyncNode();
 
-	std::vector<SyncNode> ProcessSyncNode();
+    std::vector<std::string> ProcessDescriptor();
 
-	std::vector<std::string> ProcessDescriptor();
+    std::vector<EventArgument>  ReadEventArguments();
 
-	void ReadEventArguments();
+    std::vector<EventTrigger>  ReadEventTriggers();
 
-	void ReadEventTriggers();
+    std::vector<EventNode> ProcessSMEvents();
 
-	void ProcessSMEvents();
+	void ReadFRMSStream(StateNode::MemberNode* member);
 
-	void ReadFRMSStream();
+	void ReadCandStream(StateNode::MemberNode* member );
 
-	void ProcessMembers();
+	MemberNode ProcessMembers();
 
-	void ProcessSelectors();
+	SelectorNode ProcessSelectors();
 
 public:
 
@@ -47,6 +47,6 @@ public:
 		this->fs = binaryStream;
 	}
 
-	void InitializeStateNode(std::vector<Node>& nodes);
+	void InitializeDefinitions(std::vector<StateNode::Definition>& nodes);
 };
 

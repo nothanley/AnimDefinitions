@@ -20,13 +20,14 @@ class ADefHandler
 	};
 
 	std::filebuf* fileBuffer = new std::filebuf();
-	string m_cFilePath;
 	float m_fileVersion;
 	uint32_t m_iProjectType;
 	uint32_t m_iFileSize;
 	std::istream* fs;
 
 public:
+    string m_cFilePath;
+    std::vector<StateNode::Definition> m_Definitions;
 
 	enum {
 		TYPE = 0x65707974,
@@ -35,7 +36,7 @@ public:
 		OVOR = 0x726F766F,
 		OVLY = 0x6F766C79,
 		VARI = 0x76617269,
-        EVNT = 0x65766E74,
+		EVNT = 0x65766E74,
 		ENUM = 0x656E756D,
 		DESC = 0x64657363,
 		CMDS = 0x636D6473,
@@ -43,9 +44,6 @@ public:
 		ADEF = 0x61646566
 	};
 
-    std::vector<Node> m_Definitions;
-
-    ADefHandler(){}
 	ADefHandler(const char* filePath) {
 		openFile(filePath);
 	}
@@ -134,7 +132,7 @@ private:
 		DWORD commandsCount = ReadUInt32(*fs);
 		for (int i = 0; i < commandsCount; i++) {
 			/* In game logic, these are compared with project strings
-            until a match is made and outputs its index */
+			until a match is made and outputting its index */
 			uint64_t cmdHash_0 = ReadUInt64(*fs);
 			uint64_t cmdHash_1 = ReadUInt64(*fs);
 			mirrorCmdMap.push_back(cmdHash_0);
@@ -165,15 +163,14 @@ private:
 		}
 	}
 
-    std::vector<Node> LoadAnimDef(int size) {
-		std::vector<Node> aDefNodes;
+	void LoadAnimDef(int size) {
 
 		for (int i = 0; i < size; i++) {
 			C_StateNode newStateNode(fs);
-			newStateNode.InitializeStateNode(aDefNodes);
+            newStateNode.InitializeDefinitions(this->m_Definitions);
 		}
 
-        return aDefNodes;
+		std::cout << "\n function end";
 	}
 
 	/* Interprets all binary streams within animdef */
@@ -187,7 +184,7 @@ private:
 		fileMagic = ReadUInt32(*fs);
 		versionFlag = ReadUInt32(*fs);
 
-        while (uint32_t(fs->tellg()) <= this->m_iFileSize) {
+        while ( uint32_t(fs->tellg()) <= this->m_iFileSize) {
 			binType = ReadUInt32(*fs);
 			binCount = ReadUInt32(*fs);
 
@@ -205,7 +202,7 @@ private:
 					LoadStateMirror(binCount);
 					break;
 				case (ADEF):
-                    this->m_Definitions = LoadAnimDef(binCount);
+					LoadAnimDef(binCount);
 					break;
 				default:
 					/* Covers general animdef streams */
@@ -213,7 +210,6 @@ private:
 					break;
 			}
 		}
-        std::cout << "\n [DEBUG] All Data Collected.";
 	}
 
 	void ValidateADEFs() {

@@ -33,36 +33,81 @@ namespace StateNode {
 		bool flag;
 	};
 
+    struct EventArgument {
+        uint16_t index;
+    };
+
+    struct EventTrigger {
+        uint64_t hash;
+        float value;
+    };
+
+    struct EventNode {
+        uint64_t value_0;
+        uint32_t value_1;
+        bool flag;
+        uint32_t value_2;
+        uint64_t value_3;
+        std::vector<EventTrigger> triggers;
+        std::vector<EventArgument> arguments;
+    };
+
 	struct SyncNode {
 		uint64_t valueA;
 		uint64_t valueB;
 		uint8_t flag;
 	};
 
-	struct EventNode {
-		std::vector<uint64_t> triggers;
-		std::vector<uint32_t> arguments;
+	struct Candidate {
+		uint64_t value;
+		bool flag;
+
+		float fValue_0;
+		float fValue_1;
+		uint16_t sValue_0;
+	};
+
+	struct Frame {
+		uint64_t value;
+		bool flag;
 	};
 
 	struct MemberNode {
-		std::vector<uint32_t> frames;
-		std::vector<uint64_t> candidates;
+		uint32_t type;
+		std::vector<uint64_t> values; // hashes?
+
+		std::vector<Frame> frames;
+		std::vector<Candidate> candidates;
+
+		bool encodeFlag;
+		uint32_t dValue_0;
+		uint64_t lValue_0;
+	};
+
+	struct SelectorNode {
+		std::vector<MemberNode> members;
 	};
 
 	struct GroupNode {
-		std::vector<std::string> groupDescriptors;
-		std::vector<MemberNode> members;
-		std::vector<MemberNode> selectors;
+		std::string chars;
+		std::vector<std::string> descriptors;
+		MemberNode members;
+		SelectorNode selectors;
 	};
 
 	struct Node {
 		uint32_t nodeType; // Differentiates DTT, Node, GroupNode &, EventNode types
 		std::vector< std::vector<KeyValueProp> > keyValueProperties;
-		std::vector< std::vector<SyncNode> > syncNodes;
-		std::vector< std::vector<Node> > transNodes;
-		std::vector< std::vector<Node> > ovlyNodes;
+		std::vector<SyncNode> syncNodes;
+		std::vector<Node> transNodes;
+		std::vector<Node> ovlyNodes;
 		std::vector<Node> childNodes;
 		std::vector<std::string> descriptors;
+        std::vector<EventNode> events;
+	};
+
+	struct Definition {
+		std::vector<Node> stateNodes;
 		std::vector<GroupNode> groupNodes;
 	};
 

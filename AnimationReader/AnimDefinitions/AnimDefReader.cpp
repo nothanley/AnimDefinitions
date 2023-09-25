@@ -3,9 +3,11 @@
 
 #include "AnimDefHandler.h"
 
-int ReadFileDebug()
+int main()
 {
-    ADefHandler ratFile("C:/Users/wauke/Desktop/Entrance/ratanim.adefs");
-    return 0;
+
+    ADefHandler ratFile("C:/Users/wauke/Desktop/Entrance/128.adefs");
+
+    
 }
 

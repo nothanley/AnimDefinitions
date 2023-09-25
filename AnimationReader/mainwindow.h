@@ -7,6 +7,7 @@
 #include "QDebug"
 #include "DefsTreeWidgetItem.h"
 #include "DefsTableUtils.h"
+#include "LabelTreeItemDelegate.h"
 #pragma once
 
 QT_BEGIN_NAMESPACE
@@ -27,10 +28,19 @@ private slots:
     void on_Button_File_Open_clicked();
     void on_TreeWidget_Defs_itemClicked(QTreeWidgetItem *item, int column);
 
+
+    void on_expandcollapseButton_clicked(bool checked);
+
+    void on_actionExpand_Collapse_triggered();
+
 private:
     Ui::MainWindow *ui;
     void UI_ConstructDefsTree();
     void UI_ConstructStateNode(StateNode::Node node, QTreeWidgetItem *parent);
-    ADefHandler m_AnimDefinitions;
+    void UI_ConstructGroupNode(StateNode::GroupNode group, QTreeWidgetItem *parent);
+    void UI_ConstructNewDefinitions(StateNode::Definition animDef);
+    void UI_Table_BuildEVNT(StateNode::EventNode event);
+    std::vector<StateNode::Definition> m_AnimDefinitions;
 };
+
 #endif // MAINWINDOW_H
