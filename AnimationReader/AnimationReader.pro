@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     AnimDefinitions/C_StateNode.cpp \
+    Interface/C_DefInterface.cpp \
     main.cpp \
     mainwindow.cpp
 
@@ -22,6 +23,7 @@ HEADERS += \
     ColorItemDelegate.h \
     DefsTableUtils.h \
     DefsTreeWidgetItem.h \
+    Interface/C_DefInterface.h \
     LabelTreeItemDelegate.h \
     mainwindow.h
 

@@ -32,13 +32,23 @@ public:
     void addDescriptor(std::string string) { this->m_Descriptors.push_back(string); }
     std::vector<std::string> getDescriptors(){return this->m_Descriptors;}
 
+    void setFrame(StateNode::Frame node) { this->m_Frame = node; }
+    StateNode::Frame getFrame(){return this->m_Frame;}
+
+    void setCandidate(StateNode::Candidate node) { m_Candidate = node; }
+    StateNode::Candidate getCandidate(){return this->m_Candidate;}
+
+
 private:
     StateNode::Node m_DefsNode;
     StateNode::SyncNode m_SyncNode;
     StateNode::GroupNode m_GroupNode;
     StateNode::EventNode m_EventNode;
     StateNode::MemberNode m_MemberNode;
+    StateNode::Frame m_Frame;
+    StateNode::Candidate m_Candidate;
     std::vector<std::string> m_Descriptors;
+
 };
 
 #endif // DEFSTREEWIDGETITEM_H

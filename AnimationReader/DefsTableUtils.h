@@ -2,10 +2,11 @@
 #define DEFSTABLEUTILS_H
 
 #include <QString>
+#include <QTableWidget>
 #include "AnimDefinitions/AnimDefHandler.h"
 #pragma once
 
-static QString UI_FormatKeyValueString( const StateNode::KeyValueProp kvElement, bool isolateValue=false)
+static QString FormatKeyValueString( const StateNode::KeyValueProp kvElement, bool isolateValue=false)
 {
     QString tableString = "";
     QString keyString = QString::number(kvElement.streamKey,16).toUpper();
