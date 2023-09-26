@@ -12,14 +12,13 @@ void C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDef
 
 	for (int i = 0; i < numStates; i++) {
 		Node stateNode{ STAT };
-		stateNode.keyValueProperties.push_back( ReadKeyValueProperty(false) );
+        stateNode.keyValueProperties = ReadKeyValueProperty(false);
 		stateNode.syncNodes = ProcessSyncNode();
 		stateNode.transNodes.push_back(ProcessTransNode() );
 		stateNode.ovlyNodes.push_back(ProcessTransNode() );
 		stateNode.childNodes.push_back( ProcessNode() );
 		stateNode.descriptors = ProcessDescriptor();
         stateNode.events = ProcessSMEvents(); // todo: collect this
-
 		animDef.stateNodes.push_back(stateNode);
 	}
 
@@ -39,31 +38,37 @@ void C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDef
 	aDefCollection.push_back(animDef);
 }
 
+void C_StateNode::ProcessBargNode(Node *parentNode){
+    //Process 'BARG' stream
+    uint32_t bargSig = ReadUInt32(*fs);
+    uint32_t numBargs = ReadUInt32(*fs);
+    for (int i = 0; i < numBargs; i++) {
+        uint64_t unkVal64 = ReadUInt64(*fs);
+        float unkFloat = ReadFloat(*fs);
+        Node childNode = ProcessNode(true);
+        childNode.isBargNode = true;
+        childNode.value_1 = unkVal64;
+        childNode.floatVal = unkFloat;
+        parentNode->childNodes.push_back( childNode );
+    }
+}
+
 Node C_StateNode::ReadNodeType1()
 {
 	Node animNode{ NODE };
-	bool nodeFlag = ReadBool(*fs);
-	animNode.keyValueProperties.push_back( ReadKeyValueProperty() );
+    animNode.flag = ReadBool(*fs);
+    animNode.keyValueProperties = ReadKeyValueProperty();
 	return animNode;
 }
 
 Node C_StateNode::ReadNodeType2()
 {
 	Node animNode{ NODE };
-	int32_t nodeFlag = ReadSInt32(*fs);
-	animNode.keyValueProperties.push_back(ReadKeyValueProperty());
-	uint64_t unkVal64 = ReadUInt64(*fs);
-	float unkFloat = ReadFloat(*fs);
-
-	//Process 'BARG' stream
-	uint32_t bargSig = ReadUInt32(*fs);
-	uint32_t numBargs = ReadUInt32(*fs);
-	for (int i = 0; i < numBargs; i++) {
-		uint64_t unkVal64 = ReadUInt64(*fs);
-		float unkFloat = ReadFloat(*fs);
-		animNode.childNodes.push_back( ProcessNode(true) );
-	}
-
+    animNode.value_0 = ReadSInt32(*fs);
+    animNode.keyValueProperties= ReadKeyValueProperty();
+    animNode.value_1 = ReadUInt64(*fs);
+    animNode.floatVal = ReadFloat(*fs);
+    ProcessBargNode(&animNode);
 	return animNode;
 }
 
@@ -75,7 +80,7 @@ Node C_StateNode::ProcessTransNode()
 	animNode.nodeType = ( ntohl(streamSig) == DTT_ ? DTT_ : TOVR);
 
 	for (int i = 0; i < numNodes; i++) {
-		animNode.keyValueProperties.push_back(ReadKeyValueProperty());
+        animNode.keyValueProperties= ReadKeyValueProperty();
 	}
 
 	return animNode;
@@ -262,9 +267,11 @@ Node C_StateNode::ProcessNode(bool isChild)
 
 	switch (nodeType) {
 	case(0x2):
+        parentNode.streamType = 0x2;
         parentNode = ReadNodeType2();
 		break;
 	case(0x1):
+        parentNode.streamType = 0x1;
         parentNode = ReadNodeType1();
 		break;
 	default:

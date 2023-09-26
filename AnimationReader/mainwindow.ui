@@ -923,7 +923,6 @@ QTableView:item {
 	color: rgba(255, 255, 255,185);
 	background-color: rgb(31, 46, 74);
 	border-bottom: 2px solid white;
-	border-bottom-radius: 0px;
 	border-bottom-color: rgba(255, 255, 255,110);
 }</string>
                </property>

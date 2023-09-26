@@ -55,7 +55,7 @@ namespace StateNode {
 	struct SyncNode {
 		uint64_t valueA;
 		uint64_t valueB;
-		uint8_t flag;
+        bool flag;
 	};
 
 	struct Candidate {
@@ -75,7 +75,7 @@ namespace StateNode {
 
 	struct MemberNode {
 		uint32_t type;
-		std::vector<uint64_t> values; // hashes?
+        std::vector<uint64_t> values;
 
 		std::vector<Frame> frames;
 		std::vector<Candidate> candidates;
@@ -98,13 +98,19 @@ namespace StateNode {
 
 	struct Node {
 		uint32_t nodeType; // Differentiates DTT, Node, GroupNode &, EventNode types
-		std::vector< std::vector<KeyValueProp> > keyValueProperties;
+        std::vector<KeyValueProp> keyValueProperties;
 		std::vector<SyncNode> syncNodes;
 		std::vector<Node> transNodes;
 		std::vector<Node> ovlyNodes;
 		std::vector<Node> childNodes;
 		std::vector<std::string> descriptors;
         std::vector<EventNode> events;
+        uint8_t streamType;
+        bool isBargNode = false;
+        int32_t value_0;
+        uint64_t value_1;
+        bool flag = false;
+        float floatVal;
 	};
 
 	struct Definition {

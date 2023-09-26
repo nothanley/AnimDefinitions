@@ -23,6 +23,8 @@ private:
 
 	Node ProcessTransNode();
 
+    void ProcessBargNode(Node *parentNode);
+
     std::vector<SyncNode> ProcessSyncNode();
 
     std::vector<std::string> ProcessDescriptor();
