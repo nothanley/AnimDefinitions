@@ -21,6 +21,7 @@ HEADERS += \
     AnimDefinitions/C_AnimNodes.h \
     AnimDefinitions/C_DefStream.h \
     AnimDefinitions/C_StateNode.h \
+    AnimDefinitions/C_SyncedTableWidgetItem.h \
     ColorItemDelegate.h \
     DefsTableUtils.h \
     DefsTreeWidgetItem.h \

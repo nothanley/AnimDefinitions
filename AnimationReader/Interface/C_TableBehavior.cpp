@@ -26,9 +26,7 @@ void UpdateKeyProperty(StateNode::Node* node, uint32_t key, QString value, QTabl
     if(index == -1){ qDebug() << "No Key Found."; return;}
     switch(ntohl(key)){
         case(0xBE83F7FD):
-            qDebug() << "Value Old: " << properties[index].chars.c_str();
             properties[index].chars = value.toStdString();
-            qDebug() << "Value New: " << properties[index].chars.c_str();
             break;
         default:
             break;
@@ -40,9 +38,8 @@ void CTableBehavior::UpdateNode(DefsTreeWidgetItem* item,
     FilterHeaderString(&header);
     qDebug() << "\nHeader: " << header;
     uint32_t streamKey = HexStringToUInt32(header.toStdString());
-    StateNode::Node node = item->getStateNode();
-    UpdateKeyProperty(&node, streamKey, tableItem->text(),tableItem);
-    item->setStateNode(node);
+    StateNode::Node* node = item->getStateNode();
+    UpdateKeyProperty(node, streamKey, tableItem->text(),tableItem);
 }
 void CTableBehavior::UpdateState(DefsTreeWidgetItem* item,
                                  QTableWidgetItem* tableItem, QString header){

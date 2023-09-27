@@ -51,7 +51,7 @@ void MainWindow::on_TreeWidget_Defs_itemClicked(QTreeWidgetItem *item, int colum
 {
     DefsTreeWidgetItem *selectedItem = dynamic_cast<DefsTreeWidgetItem*>(item);
     if (!selectedItem){return;}
-    ignoreTableUpdate = true;
+
     ClearAndResetTable(ui->TableWidget_Defs);
     uint32_t nodeType = ui->TreeWidget_Defs->currentIndex().data(Qt::UserRole+1).toUInt();
     switch (nodeType){
@@ -81,7 +81,6 @@ void MainWindow::on_TreeWidget_Defs_itemClicked(QTreeWidgetItem *item, int colum
             break;
     }
     ui->TableWidget_Defs->setItemDelegateForColumn(1,new ColorItemDelegate(this));
-    ignoreTableUpdate = false;
 }
 
 
@@ -104,13 +103,11 @@ void MainWindow::on_actionExpand_Collapse_triggered()
 }
 
 void MainWindow::RefreshTableTreeSync(){
-    ignoreTableUpdate = true;
     on_TreeWidget_Defs_itemClicked(ui->TreeWidget_Defs->currentItem(), 0);
-    ignoreTableUpdate = false;
 }
 
 void MainWindow::on_TableWidget_Defs_itemChanged(QTableWidgetItem *item)
-{
+{/*
     if (item->column() != 1){return;}
     DefsTreeWidgetItem *currentDef = dynamic_cast<DefsTreeWidgetItem*>(
                                                 ui->TreeWidget_Defs->currentItem() );
@@ -120,7 +117,7 @@ void MainWindow::on_TableWidget_Defs_itemChanged(QTableWidgetItem *item)
         qDebug() << "\nUsing Def:" << currentDef->text(0);
         qDebug() << "Node Type: " << nodeType;
         CTableBehavior::UpdateTableWithNode(currentDef,item,nodeType,header);
-    }
+    }*/
 }
 
 
