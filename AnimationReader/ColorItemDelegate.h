@@ -16,16 +16,23 @@ public:
             painter->setPen(Qt::NoPen);
             painter->drawRect(option.rect);
             painter->setFont(QFont("Microsoft Tai Le",8));
+            painter->setPen(QColor(52, 171, 241));
 
-            if(index.data().toString().contains("true") || index.data().toString().contains("false"))
+            switch (index.data(Qt::UserRole).toUInt())
             {
-                painter->setPen(QColor(242,138,2));
-            }
-            else if(!index.data().toString().contains("\"")){
-                painter->setPen(QColor(52, 171, 241));
-            }
-            else{
-                painter->setPen(QColor(98, 230, 232));
+                case(0x0):
+                    painter->setPen(QColor(52, 171, 241));
+                    break;
+                case(0x1):
+                    painter->setPen(QColor(98, 230, 232));
+                    break;
+                case(0x2):
+                    painter->setPen(QColor(242,138,2));
+                    break;
+                case(0x3):
+                    break;
+                default:
+                    break;
             }
 
             QStyleOptionViewItem *newViewItem = new QStyleOptionViewItem();
@@ -35,6 +42,7 @@ public:
             QString filterString = index.data().toString().remove("\"");
             painter->drawText(newViewItem->rect, filterString);
             painter->restore();
+            delete newViewItem;
         }
 };
 

@@ -253,13 +253,13 @@ void CDefInterface::UI_Table_BuildNODE(QTableWidget* table, DefsTreeWidgetItem* 
         CDefInterface::AddValueToTable(table, key, value ); }
 
     if (node.streamType == 0x2){
-        AddValueToTable(table,"value",node.value_0);
-        AddValueToTable(table,"value",node.value_1);
-        AddValueToTable(table,"value",node.floatVal); }
+        AddValueToTable(table,"int value",node.value_0);
+        AddValueToTable(table,"long value",node.value_1);
+        AddValueToTable(table,"float value",node.floatVal); }
     if (node.streamType == 0x1){ AddValueToTable(table,"flag",node.flag); }
     if (node.isBargNode){
-        AddValueToTable(table,"value",node.value_1);
-        AddValueToTable(table,"value",node.floatVal);  }
+        AddValueToTable(table,"long value",node.value_1);
+        AddValueToTable(table,"float value",node.floatVal);  }
 }
 
 void CDefInterface::UI_Table_BuildKeyValue(QTableWidget* table, DefsTreeWidgetItem* item){

@@ -11,6 +11,7 @@ CONFIG += c++11
 SOURCES += \
     AnimDefinitions/C_StateNode.cpp \
     Interface/C_DefInterface.cpp \
+    Interface/C_TableBehavior.cpp \
     main.cpp \
     mainwindow.cpp
 
@@ -24,6 +25,7 @@ HEADERS += \
     DefsTableUtils.h \
     DefsTreeWidgetItem.h \
     Interface/C_DefInterface.h \
+    Interface/C_TableBehavior.h \
     LabelTreeItemDelegate.h \
     mainwindow.h
 

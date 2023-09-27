@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "Interface/C_DefInterface.h"
+#include "Interface/C_TableBehavior.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -50,6 +51,7 @@ void MainWindow::on_TreeWidget_Defs_itemClicked(QTreeWidgetItem *item, int colum
 {
     DefsTreeWidgetItem *selectedItem = dynamic_cast<DefsTreeWidgetItem*>(item);
     if (!selectedItem){return;}
+    ignoreTableUpdate = true;
     ClearAndResetTable(ui->TableWidget_Defs);
     uint32_t nodeType = ui->TreeWidget_Defs->currentIndex().data(Qt::UserRole+1).toUInt();
     switch (nodeType){
@@ -79,6 +81,7 @@ void MainWindow::on_TreeWidget_Defs_itemClicked(QTreeWidgetItem *item, int colum
             break;
     }
     ui->TableWidget_Defs->setItemDelegateForColumn(1,new ColorItemDelegate(this));
+    ignoreTableUpdate = false;
 }
 
 
@@ -87,11 +90,9 @@ void MainWindow::on_expandcollapseButton_clicked(bool checked)
     if (checked){
         this->ui->TreeWidget_Defs->expandAll();
         this->ui->expandcollapseButton->setText("Collapse All");
-    }
-    else{
-        this->ui->TreeWidget_Defs->collapseAll();
-        this->ui->expandcollapseButton->setText("Expand All");
-    }
+        return; }
+    this->ui->TreeWidget_Defs->collapseAll();
+    this->ui->expandcollapseButton->setText("Expand All");
 }
 
 
@@ -102,5 +103,32 @@ void MainWindow::on_actionExpand_Collapse_triggered()
     on_expandcollapseButton_clicked( !isToggled );
 }
 
+void MainWindow::RefreshTableTreeSync(){
+    ignoreTableUpdate = true;
+    on_TreeWidget_Defs_itemClicked(ui->TreeWidget_Defs->currentItem(), 0);
+    ignoreTableUpdate = false;
+}
 
+void MainWindow::on_TableWidget_Defs_itemChanged(QTableWidgetItem *item)
+{
+    if (item->column() != 1){return;}
+    DefsTreeWidgetItem *currentDef = dynamic_cast<DefsTreeWidgetItem*>(
+                                                ui->TreeWidget_Defs->currentItem() );
+    QString header = ui->TableWidget_Defs->item( item->row() , 0 )->text();
+    uint32_t nodeType = ui->TreeWidget_Defs->currentIndex().data(Qt::UserRole+1).toUInt();
+    if (currentDef && !ignoreTableUpdate){
+        qDebug() << "\nUsing Def:" << currentDef->text(0);
+        qDebug() << "Node Type: " << nodeType;
+        CTableBehavior::UpdateTableWithNode(currentDef,item,nodeType,header);
+    }
+}
+
+
+void MainWindow::on_TableWidget_Defs_cellDoubleClicked(int row, int column)
+{
+    QTableWidgetItem* item = ui->TableWidget_Defs->item(row,column);
+    if (item->text().contains("\"")){
+        item->setText(item->text().remove("\""));
+    }
+}
 

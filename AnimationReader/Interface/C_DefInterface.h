@@ -41,24 +41,35 @@ public:
         tableWidget->setRowCount(rowTotal);
         header = header.contains("\"") ? header : "\"" + header + "\" :";
         tableWidget->setItem(rowTotal - 1, 0, new QTableWidgetItem(header));
-        QString itemText;
+        QTableWidgetItem* tableItem = new QTableWidgetItem();
 
+        QString itemText;
+        tableItem->setData(Qt::UserRole, 0x9);
         if constexpr (std::is_same<T, QString>::value) {
             itemText = value;
+            if (value.contains("\"")){tableItem->setData(Qt::UserRole, 0x1);}
+            else if (value == "true" || value == "false"){tableItem->setData(Qt::UserRole, 0x2);}
+            else{tableItem->setData(Qt::UserRole, 0x0);}
         } else if constexpr (std::is_same<T, uint64_t>::value) {
             itemText = "\"" + QString::number(value, 16) + "\"";
+            tableItem->setData(Qt::UserRole, 0x1);
         } else if constexpr (std::is_same<T, bool>::value) {
             itemText = value ? "true" : "false";
+            tableItem->setData(Qt::UserRole, 0x2);
         } else if constexpr (std::is_same<T, float>::value) {
             itemText = QString::number(value);
+            tableItem->setData(Qt::UserRole, 0x3);
         } else if constexpr (std::is_same<T, uint32_t>::value) {
             itemText = QString::number(value);
+            tableItem->setData(Qt::UserRole, 0x4);
         } else if constexpr (std::is_same<T, uint16_t>::value) {
             itemText = QString::number(value);
+            tableItem->setData(Qt::UserRole, 0x5);
         }
         else{ qDebug() << "[DEBUG] No var type"; return; }
 
-        tableWidget->setItem(rowTotal - 1, 1, new QTableWidgetItem(itemText));
+        tableItem->setText(itemText);
+        tableWidget->setItem(rowTotal - 1, 1, tableItem);
     }
 
 };

@@ -30,11 +30,15 @@ private slots:
     void on_expandcollapseButton_clicked(bool checked);
     void on_actionExpand_Collapse_triggered();
     void UpdateWindowData();
+    void on_TableWidget_Defs_itemChanged(QTableWidgetItem *item);
+    void RefreshTableTreeSync();
+    void on_TableWidget_Defs_cellDoubleClicked(int row, int column);
+
 private:
     Ui::MainWindow *ui;
     std::vector<StateNode::Definition> m_AnimDefinitions;
     QString m_DefsFilePath = "";
-
+    bool ignoreTableUpdate = false;
 };
 
 #endif // MAINWINDOW_H
