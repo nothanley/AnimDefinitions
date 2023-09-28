@@ -20,13 +20,14 @@ class ADefHandler
 	};
 
 	std::filebuf* fileBuffer = new std::filebuf();
-	string m_cFilePath;
 	float m_fileVersion;
 	uint32_t m_iProjectType;
 	uint32_t m_iFileSize;
 	std::istream* fs;
 
 public:
+    string m_cFilePath;
+    std::vector<StateNode::Definition> m_Definitions;
 
 	enum {
 		TYPE = 0x65707974,
@@ -163,11 +164,10 @@ private:
 	}
 
 	void LoadAnimDef(int size) {
-		std::vector<StateNode::Definition> animDefinitions;
 
 		for (int i = 0; i < size; i++) {
 			C_StateNode newStateNode(fs);
-			newStateNode.InitializeDefinitions(animDefinitions);
+            newStateNode.InitializeDefinitions(this->m_Definitions);
 		}
 
 		std::cout << "\n function end";
@@ -184,7 +184,7 @@ private:
 		fileMagic = ReadUInt32(*fs);
 		versionFlag = ReadUInt32(*fs);
 
-		while (fs->tellg() <= this->m_iFileSize) {
+        while ( uint32_t(fs->tellg()) <= this->m_iFileSize) {
 			binType = ReadUInt32(*fs);
 			binCount = ReadUInt32(*fs);
 

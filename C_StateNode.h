@@ -23,23 +23,25 @@ private:
 
 	Node ProcessTransNode();
 
-	void ReadCandStream(uint32_t candidateEncoding);
+    void ProcessBargNode(Node *parentNode);
 
-	std::vector<SyncNode> ProcessSyncNode();
+    std::vector<SyncNode> ProcessSyncNode();
 
-	std::vector<std::string> ProcessDescriptor();
+    std::vector<std::string> ProcessDescriptor();
 
-	void ReadEventArguments();
+    std::vector<EventArgument>  ReadEventArguments();
 
-	void ReadEventTriggers();
+    std::vector<EventTrigger>  ReadEventTriggers();
 
-	void ProcessSMEvents();
+    std::vector<EventNode> ProcessSMEvents();
 
-	void ReadFRMSStream();
+	void ReadFRMSStream(StateNode::MemberNode* member);
 
-	void ProcessMembers();
+	void ReadCandStream(StateNode::MemberNode* member );
 
-	void ProcessSelectors();
+	MemberNode ProcessMembers();
+
+	SelectorNode ProcessSelectors();
 
 public:
 

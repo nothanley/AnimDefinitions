@@ -12,14 +12,13 @@ void C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDef
 
 	for (int i = 0; i < numStates; i++) {
 		Node stateNode{ STAT };
-		stateNode.keyValueProperties.push_back( ReadKeyValueProperty(false) );
+        stateNode.keyValueProperties = ReadKeyValueProperty(false);
 		stateNode.syncNodes = ProcessSyncNode();
 		stateNode.transNodes.push_back(ProcessTransNode() );
 		stateNode.ovlyNodes.push_back(ProcessTransNode() );
 		stateNode.childNodes.push_back( ProcessNode() );
 		stateNode.descriptors = ProcessDescriptor();
-		ProcessSMEvents(); // todo: collect this
-
+        stateNode.events = ProcessSMEvents(); // todo: collect this
 		animDef.stateNodes.push_back(stateNode);
 	}
 
@@ -31,40 +30,45 @@ void C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDef
 		GroupNode group;
 		group.chars = ReadString(*fs, ReadUInt32(*fs));
 		group.descriptors = ProcessDescriptor();
-		ProcessMembers();  // todo: collect this
-		ProcessSelectors();  // todo: collect this
-
+		group.members = ProcessMembers();
+		group.selectors = ProcessSelectors();
 		animDef.groupNodes.push_back(group);
 	}
 
 	aDefCollection.push_back(animDef);
 }
 
+void C_StateNode::ProcessBargNode(Node *parentNode){
+    //Process 'BARG' stream
+    uint32_t bargSig = ReadUInt32(*fs);
+    uint32_t numBargs = ReadUInt32(*fs);
+    for (int i = 0; i < numBargs; i++) {
+        uint64_t unkVal64 = ReadUInt64(*fs);
+        float unkFloat = ReadFloat(*fs);
+        Node childNode = ProcessNode(true);
+        childNode.isBargNode = true;
+        childNode.value_1 = unkVal64;
+        childNode.floatVal = unkFloat;
+        parentNode->childNodes.push_back( childNode );
+    }
+}
+
 Node C_StateNode::ReadNodeType1()
 {
 	Node animNode{ NODE };
-	bool nodeFlag = ReadBool(*fs);
-	animNode.keyValueProperties.push_back( ReadKeyValueProperty() );
+    animNode.flag = ReadBool(*fs);
+    animNode.keyValueProperties = ReadKeyValueProperty();
 	return animNode;
 }
 
 Node C_StateNode::ReadNodeType2()
 {
 	Node animNode{ NODE };
-	int32_t nodeFlag = ReadSInt32(*fs);
-	animNode.keyValueProperties.push_back(ReadKeyValueProperty());
-	uint64_t unkVal64 = ReadUInt64(*fs);
-	float unkFloat = ReadFloat(*fs);
-
-	//Process 'BARG' stream
-	uint32_t bargSig = ReadUInt32(*fs);
-	uint32_t numBargs = ReadUInt32(*fs);
-	for (int i = 0; i < numBargs; i++) {
-		uint64_t unkVal64 = ReadUInt64(*fs);
-		float unkFloat = ReadFloat(*fs);
-		animNode.childNodes.push_back( ProcessNode(true) );
-	}
-
+    animNode.value_0 = ReadSInt32(*fs);
+    animNode.keyValueProperties= ReadKeyValueProperty();
+    animNode.value_1 = ReadUInt64(*fs);
+    animNode.floatVal = ReadFloat(*fs);
+    ProcessBargNode(&animNode);
 	return animNode;
 }
 
@@ -76,63 +80,12 @@ Node C_StateNode::ProcessTransNode()
 	animNode.nodeType = ( ntohl(streamSig) == DTT_ ? DTT_ : TOVR);
 
 	for (int i = 0; i < numNodes; i++) {
-		animNode.keyValueProperties.push_back(ReadKeyValueProperty());
+        animNode.keyValueProperties= ReadKeyValueProperty();
 	}
 
 	return animNode;
 }
 
-void C_StateNode::ReadCandStream(uint32_t candidateEncoding)
-{
-	uint32_t streamSig = ReadUInt32(*fs);
-	uint32_t numCands = ReadUInt32(*fs);
-	for (int i = 0; i < numCands; i++) {
-		uint64_t unkVal1 = ReadUInt64(*fs);
-		bool flag = ReadBool(*fs);
-	}
-
-	switch (ntohl(candidateEncoding)) {
-		case(0xEB7AD409):
-			for (int i = 0; i < numCands; i++) {
-				ReadFloat(*fs);
-				ReadFloat(*fs);
-			}
-			ReadUInt32(*fs);
-			break;
-		case(0xF342C816):
-			break;
-		case(0x76A50FDC):
-			ReadUInt64(*fs);
-			ReadBool(*fs);
-			break;
-		case(0x4BFF8647):
-			for (int i = 0; i < numCands; i++) {
-				ReadFloat(*fs);
-			}
-			ReadBool(*fs);
-			break;
-		case(0x2F05210F):
-			for (int i = 0; i < numCands; i++) {
-				ReadUShort(*fs);
-				ReadFloat(*fs);
-				ReadFloat(*fs);
-			}
-			ReadUInt64(*fs);
-			ReadBool(*fs);
-			break;
-		case(0x1A8AECAF):
-			for (int i = 0; i < numCands; i++) {
-				ReadUShort(*fs);
-			}
-			ReadUInt64(*fs);
-			ReadBool(*fs);
-			break;
-		default:
-			std::cout << fs->tellg();
-			std::cout << "\nCould not read candidate node.";
-			break;
-	}
-}
 
 std::vector<SyncNode> C_StateNode::ProcessSyncNode()
 {
@@ -145,6 +98,7 @@ std::vector<SyncNode> C_StateNode::ProcessSyncNode()
 		sNode.valueA = ReadUInt64(*fs);
 		sNode.valueB = ReadUInt64(*fs);
 		sNode.flag = ReadBool(*fs);
+        syncNodes.push_back(sNode);
 	}
 
 	ReadUInt64(*fs); // 0x0 constant
@@ -164,83 +118,145 @@ std::vector<std::string> C_StateNode::ProcessDescriptor()
 	return descriptors;
 }
 
-void C_StateNode::ReadEventArguments()
+
+std::vector<EventArgument> C_StateNode::ReadEventArguments()
 {
-	ReadUInt32(*fs); //  0xARGS
-	uint32_t numArgs = ReadUInt32(*fs);
-	for (int i = 0; i < numArgs; i++) {
-		uint16_t argIdx = ReadUShort(*fs);
-	}
+    uint32_t streamSig = ReadUInt32(*fs); //  0xARGS
+    uint32_t numArgs = ReadUInt32(*fs);
+    std::vector<EventArgument> argCollection;
+
+    for (int i = 0; i < numArgs; i++)
+        argCollection.push_back(EventArgument{ ReadUShort(*fs) });
+
+    return argCollection;
 }
 
-void C_StateNode::ReadEventTriggers()
+std::vector<EventTrigger> C_StateNode::ReadEventTriggers()
 {
-	ReadUInt32(*fs); // 0xTRIGS
-	uint32_t numTriggers = ReadUInt32(*fs);
-	for (int i = 0; i < numTriggers; i++) {
-		uint64_t unkVal1 = ReadUInt64(*fs);
-		float unkFloat1 = ReadFloat(*fs);
-	}
+    uint32_t streamSig = ReadUInt32(*fs); // 0xTRIGS
+    uint32_t numTriggers = ReadUInt32(*fs);
+    std::vector<EventTrigger> trigCollection;
+
+    for (int i = 0; i < numTriggers; i++)
+        trigCollection.push_back(
+            EventTrigger{ ReadUInt64(*fs), ReadFloat(*fs) } );
+
+    return trigCollection;
 }
 
-void C_StateNode::ProcessSMEvents()
+std::vector<EventNode> C_StateNode::ProcessSMEvents()
 {
-	std::vector<EventNode> events;
+    std::vector<EventNode> events;
+    uint32_t streamSig = ReadUInt32(*fs);
+    uint32_t numEvents = ReadUInt32(*fs);
+
+    for (int i = 0; i < numEvents; i++) {
+        EventNode newEvent{ ReadUInt64(*fs),
+            ReadUInt32(*fs), ReadBool(*fs) };
+
+        if (!newEvent.flag) {
+            newEvent.value_2 = ReadUInt32(*fs);
+            newEvent.value_3 = ReadUInt64(*fs);
+        }
+
+        newEvent.triggers = ReadEventTriggers();
+        newEvent.arguments = ReadEventArguments();
+        events.push_back(newEvent);
+    }
+    return events;
+}
+
+void C_StateNode::ReadFRMSStream(StateNode::MemberNode* member)
+{
 	uint32_t streamSig = ReadUInt32(*fs);
-	uint32_t numEvents = ReadUInt32(*fs);
-
-	for (int i = 0; i < numEvents; i++) {
-		uint64_t unkVal1 = ReadUInt64(*fs);
-		uint32_t unkVal2 = ReadUInt32(*fs);
-		bool flag = ReadBool(*fs);
-
-		if (!flag) {
-			uint32_t unkVal3 = ReadUInt32(*fs);
-			uint64_t unkVal4 = ReadUInt64(*fs);
-		}
-
-		ReadEventTriggers();
-		ReadEventArguments();
-	}
-}
-
-void C_StateNode::ReadFRMSStream()
-{
-	ReadUInt32(*fs);
 	uint32_t numFrames = ReadUInt32(*fs);
 
-	for (int i = 0; i < numFrames; i++) {
-		uint64_t unkVal1 = ReadUInt64(*fs);
-		bool flag = ReadBool(*fs);
-	}
+	for (int i = 0; i < numFrames; i++)
+		member->frames.push_back( StateNode::Frame{ ReadUInt64(*fs) ,  ReadBool(*fs) } );
 }
 
-void C_StateNode::ProcessMembers()
+void C_StateNode::ReadCandStream(StateNode::MemberNode* member)
 {
+    uint32_t streamSig = ReadUInt32(*fs);
+    uint32_t numCands = ReadUInt32(*fs);
+
+    for (int i = 0; i < numCands; i++) {
+        member->candidates.push_back( StateNode::Candidate{
+                    member->type, ReadUInt64(*fs) ,  ReadBool(*fs) });
+    }
+
+    switch (ntohl(member->type)) {
+        case(0xEB7AD409):
+            for (int i = 0; i < numCands; i++) {
+				member->candidates[i].fValue_0 = ReadFloat(*fs);
+				member->candidates[i].fValue_1 = ReadFloat(*fs);
+            }
+			member->dValue_0 = ReadUInt32(*fs);
+            break;
+        case(0xF342C816):
+            break;
+        case(0x76A50FDC):
+			member->lValue_0 = ReadUInt64(*fs);
+			member->encodeFlag = ReadBool(*fs);
+            break;
+        case(0x4BFF8647):
+            for (int i = 0; i < numCands; i++) {
+				member->candidates[i].fValue_0 = ReadFloat(*fs);
+            }
+			member->encodeFlag = ReadBool(*fs);
+            break;
+        case(0x2F05210F):
+            for (int i = 0; i < numCands; i++) {
+				member->candidates[i].sValue_0 = ReadUShort(*fs);
+				member->candidates[i].fValue_0 = ReadFloat(*fs);
+				member->candidates[i].fValue_1 = ReadFloat(*fs);
+            }
+			member->lValue_0 = ReadUInt64(*fs);
+			member->encodeFlag = ReadBool(*fs);
+            break;
+        case(0x1A8AECAF):
+            for (int i = 0; i < numCands; i++) {
+				member->candidates[i].sValue_0 = ReadUShort(*fs);
+            }
+			member->lValue_0 = ReadUInt64(*fs);
+			member->encodeFlag = ReadBool(*fs);
+            break;
+        default:
+            std::cout << fs->tellg();
+            std::cout << "\nCould not read candidate node.";
+            break;
+    }
+}
+
+MemberNode C_StateNode::ProcessMembers()
+{
+	MemberNode member;
 	uint32_t streamSig = ReadUInt32(*fs);
 	uint32_t numMembs = ReadUInt32(*fs);
-	uint32_t selType;
 
 	for (int i = 0; i < numMembs; i++)
-		uint64_t unkVal1 = ReadUInt64(*fs);
+		member.values.push_back(ReadUInt64(*fs));
 
-	selType = ReadUInt32(*fs);
-
-	ReadFRMSStream();
-	ReadCandStream(selType);
+	member.type = ReadUInt32(*fs);
+	ReadFRMSStream(&member);
+	ReadCandStream(&member);
+	return member;
 }
 
-void C_StateNode::ProcessSelectors()
+SelectorNode C_StateNode::ProcessSelectors()
 {
+	SelectorNode newSelector;
 	uint32_t streamSig = ReadUInt32(*fs);
-	uint32_t numSels = ReadUInt32(*fs);
-	uint32_t selType;
+	uint32_t numMembs = ReadUInt32(*fs);
 
-	for (int i = 0; i < numSels; i++) {
-		selType = ReadUInt32(*fs);
-		ReadFRMSStream();
-		ReadCandStream(selType);
+	for (int i = 0; i < numMembs; i++) {
+		MemberNode member;
+		member.type = ReadUInt32(*fs);
+		ReadFRMSStream(&member);
+		ReadCandStream(&member);
+		newSelector.members.push_back(member);
 	}
+	return newSelector;
 }
 
 Node C_StateNode::ProcessNode(bool isChild)
@@ -251,16 +267,18 @@ Node C_StateNode::ProcessNode(bool isChild)
 
 	switch (nodeType) {
 	case(0x2):
-		parentNode.childNodes.push_back(ReadNodeType2());
+        parentNode.streamType = 0x2;
+        parentNode = ReadNodeType2();
 		break;
 	case(0x1):
-		parentNode.childNodes.push_back(ReadNodeType1());
+        parentNode.streamType = 0x1;
+        parentNode = ReadNodeType1();
 		break;
 	default:
 		std::cout << fs->tellg();
 		std::cout << "\nInvalid stream type.";
-		break;
-	}
+        break;  }
+
 	return parentNode;
 }
 

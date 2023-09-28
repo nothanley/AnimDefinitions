@@ -6,7 +6,7 @@
 int main()
 {
 
-    ADefHandler ratFile("C:/Users/wauke/Desktop/Entrance/ratanim.adefs");
+    ADefHandler ratFile("C:/Users/wauke/Desktop/Entrance/128.adefs");
 
     
 }

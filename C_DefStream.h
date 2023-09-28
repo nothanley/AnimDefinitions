@@ -2,7 +2,7 @@
 #pragma once
 
 #include <iostream>
-#include "..\AnimsWrapper\Utilities\BinaryIO.h"
+#include "BinaryIO.h"
 #include <vector>
 #pragma comment(lib, "Ws2_32.lib")
 #pragma once
