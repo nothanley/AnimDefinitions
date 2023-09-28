@@ -6,5 +6,6 @@
         <file>graphics/branch-open.png</file>
         <file>graphics/vline.png</file>
         <file>graphics/node-icon.png</file>
+        <file>graphics/icon-stack.png</file>
     </qresource>
 </RCC>

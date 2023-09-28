@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "Interface/C_DefInterface.h"
 #include "Interface/C_TableBehavior.h"
+#include "AnimDefinitions/C_DefinitionEncoder.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -54,6 +55,18 @@ void MainWindow::UpdateWindowData(){
 }
 
 void MainWindow::on_Button_File_Open_clicked(){ /* Redirect to File Open Method */ on_actionOpen_File_triggered(); }
+
+
+void MainWindow::on_SaveButton_clicked()
+{
+    if (this->m_AnimDefinitions.size() == 0){ return;}
+    QString presetPath = (m_DefsFilePath == "") ? this->m_ExplorerPath : this->m_DefsFilePath;
+    std::string saveFilePath = QFileDialog::getSaveFileName(this, tr("Save .adefs file"), presetPath,
+                                        tr("Animation Definitions (*.adefs)") ).toStdString();
+    if (saveFilePath == ""){ return; }
+    qDebug() << "Save to " << QString::fromStdString(saveFilePath);
+    CDefinitionEncoder(&m_AnimDefinitions).WriteToFile(saveFilePath);
+}
 
 
 void MainWindow::on_TreeWidget_Defs_itemClicked(QTreeWidgetItem *item, int column)
@@ -183,10 +196,6 @@ void MainWindow::on_TableWidget_Defs_cellDoubleClicked(int row, int column)
         item->setText( QString::fromStdString(num) ); }
     updateTable = true;
 }
-
-
-
-
 
 
 

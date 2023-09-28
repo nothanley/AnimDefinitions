@@ -23,7 +23,7 @@ public:
          *tableDisplayString = bool(*value) ? "true" : "false";
     }
     void DisplayFloat(QString* tableDisplayString, QVariant type, QPainter *painter) const{
-         painter->setPen(QColor(52, 171, 241));
+         painter->setPen(QColor(219, 106, 134));
          double value = static_cast<double> ((float)*qvariant_cast<float *>(type));
          *tableDisplayString = (std::floor(value) == value) ?
                      QString::number(value,'f',2) : QString::number(value,'f');
@@ -44,17 +44,17 @@ public:
          *tableDisplayString = QString::number(*value);
     }
     void DisplayQString(QString* tableDisplayString, QVariant type, QPainter *painter) const{
-         painter->setPen(QColor(52, 171, 241));
+         painter->setPen(QColor(105, 221, 166));
          QString* value = qvariant_cast<QString*>(type);
          *tableDisplayString = QString(*value);
     }
     void DisplayStdStringPtr(QString* tableDisplayString, QVariant type, QPainter *painter) const{
-         painter->setPen(QColor(52, 171, 241));
+         painter->setPen(QColor(105, 221, 166));
          std::string* value = qvariant_cast<std::string *>(type);
          *tableDisplayString = QString::fromStdString(*value);
     }
     void DisplayStdString(QString* tableDisplayString, QVariant type, QPainter *painter) const{
-        painter->setPen(QColor(52, 171, 241));
+        painter->setPen(QColor(105, 221, 166));
         std::string value = qvariant_cast<std::string>(type);
         *tableDisplayString = QString::fromStdString(value);
     }

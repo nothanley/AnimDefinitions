@@ -115,4 +115,30 @@ namespace BinaryIO {
 		return (ReadByte(in) != 0);
 	}
 
+    //Write-Methods
+
+    static void WriteUInt32(ofstream* fs, uint32_t value) {
+        fs->write(reinterpret_cast<char*>(&value), sizeof(uint32_t));
+    }
+    static void WriteUInt16(ofstream* fs, uint16_t value) {
+        fs->write(reinterpret_cast<char*>(&value), sizeof(uint16_t));
+    }
+    static void WriteByte(ofstream* fs, uint8_t value) {
+        fs->write(reinterpret_cast<char*>(&value), sizeof(uint8_t));
+    }
+    static void WriteInt32(ofstream* fs, int32_t value) {
+        fs->write(reinterpret_cast<char*>(&value), sizeof(int32_t));
+    }
+    static void WriteFloat(ofstream* fs, float value) {
+        fs->write(reinterpret_cast<char*>(&value), sizeof(float));
+    }
+    static void WriteChars(ofstream* fs, std::string value) {
+        fs->write(value.c_str(),value.size());
+    }
+    static void WriteSignature(ofstream* fs, std::string value) {
+        uint32_t* streamHeader = reinterpret_cast<uint32_t*>(&value);
+        *streamHeader = ntohl(*streamHeader);
+        WriteUInt32(fs,*streamHeader);
+    }
+
 }

@@ -34,6 +34,8 @@ private slots:
     void RefreshTableTreeSync();
     void on_TableWidget_Defs_cellDoubleClicked(int row, int column);
     void UpdateFileStatsLabels();
+    void on_SaveButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     std::vector<StateNode::Definition> m_AnimDefinitions;
