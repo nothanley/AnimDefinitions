@@ -2,96 +2,111 @@
 #include "DefsTableUtils.h"
 #pragma once
 
+void CDefInterface::AddValueToTable(QTableWidget *tableWidget, QString header, QVariant value)
+{
+    int rowTotal = tableWidget->rowCount() + 1;
+    tableWidget->setRowCount(rowTotal);
+    header = header.contains("\"") ? header : "\"" + header + "\" :";
+    tableWidget->setItem(rowTotal - 1, 0, new QTableWidgetItem(header));
 
-void CDefInterface::UI_Table_BuildEVNT(QTableWidget* table, StateNode::EventNode event){
-    AddValueToTable(table, "value_0", event.value_0 );
-    AddValueToTable(table, "value_1", event.value_1 );
+    SyncedTableWidgetItem* tableItem = new SyncedTableWidgetItem();
+    tableItem->setData(Qt::UserRole, 0x50); // default type
+    bool opsRes = TypeHandler::HandleValue(value,tableItem); // Deals with types
+    if (!opsRes){ qDebug() << " Could not handle for : " << value.typeName(); }
+
+    tableItem->setText("");
+    tableWidget->setItem(rowTotal - 1, 1, tableItem);
+}
+
+void CDefInterface::UI_Table_BuildEVNT(QTableWidget* table, StateNode::EventNode* event){
+    AddValueToTable(table, "value_0", QVariant::fromValue(&event->value_0));
+    AddValueToTable(table, "value_1", QVariant::fromValue(&event->value_1) );
     BuildEvent(table,event);
 }
 
-void CDefInterface::UI_Table_BuildMEMB(QTableWidget* table, StateNode::MemberNode member){
-    switch (ntohl(member.type)) {
+void CDefInterface::UI_Table_BuildMEMB(QTableWidget* table, StateNode::MemberNode* member){
+    switch (ntohl(member->type)) {
         case(0xEB7AD409):
-            AddValueToTable(table, "value_0", member.dValue_0 );
+            AddValueToTable(table, "value_0", QVariant::fromValue(&member->dValue_0) );
             break;
         case(0x76A50FDC):
-            AddValueToTable(table, "value_0", member.lValue_0 );
-            AddValueToTable(table, "value_1", member.encodeFlag );
+            AddValueToTable(table, "value_0", QVariant::fromValue(&member->lValue_0) );
+            AddValueToTable(table, "value_1", QVariant::fromValue(&member->encodeFlag) );
             break;
         case(0x4BFF8647):
-            AddValueToTable(table, "value_0", member.encodeFlag );
+            AddValueToTable(table, "value_0", QVariant::fromValue(&member->encodeFlag) );
             break;
         case(0x2F05210F):
-            AddValueToTable(table, "value_0", member.lValue_0 );
-            AddValueToTable(table, "value_1", member.encodeFlag );
+            AddValueToTable(table, "value_0", QVariant::fromValue(&member->lValue_0) );
+            AddValueToTable(table, "value_1", QVariant::fromValue(&member->encodeFlag) );
             break;
         case(0x1A8AECAF):
-            AddValueToTable(table, "value_0", member.lValue_0 );
-            AddValueToTable(table, "value_1", member.encodeFlag );
+            AddValueToTable(table, "value_0", QVariant::fromValue(&member->lValue_0) );
+            AddValueToTable(table, "value_1", QVariant::fromValue(&member->encodeFlag) );
             break;
         default:
             break;
     }
 }
 
-void CDefInterface::UI_Table_BuildCAND(QTableWidget* table, StateNode::Candidate candidate){
-    AddValueToTable(table, "value" , candidate.value);
-    AddValueToTable(table,"value",candidate.flag);
+void CDefInterface::UI_Table_BuildCAND(QTableWidget* table, StateNode::Candidate* candidate){
+    AddValueToTable(table, "value" , QVariant::fromValue(&candidate->value));
+    AddValueToTable(table,"value", QVariant::fromValue(&candidate->flag));
 
-    switch (ntohl(candidate.type)) {
+    switch (ntohl(candidate->type)) {
         case(0xEB7AD409): //float, float
-            AddValueToTable(table, "value_0", candidate.fValue_0 );
-            AddValueToTable(table, "value_1", candidate.fValue_1 );
+            AddValueToTable(table, "value_0", QVariant::fromValue(&candidate->fValue_0) );
+            AddValueToTable(table, "value_1", QVariant::fromValue(&candidate->fValue_1) );
             break;
         case(0x4BFF8647): //float value
-            AddValueToTable(table, "value_0", candidate.fValue_0 );
+            AddValueToTable(table, "value_0", QVariant::fromValue(&candidate->fValue_0) );
             break;
         case(0x2F05210F): // short, float ,float
-            AddValueToTable(table, "value_0", candidate.sValue_0 );
-            AddValueToTable(table, "value_1", candidate.fValue_0 );
-            AddValueToTable(table, "value_2", candidate.fValue_1 );
+            AddValueToTable(table, "value_0", QVariant::fromValue(&candidate->sValue_0) );
+            AddValueToTable(table, "value_1", QVariant::fromValue(&candidate->fValue_0) );
+            AddValueToTable(table, "value_2", QVariant::fromValue(&candidate->fValue_1) );
             break;
         case(0x1A8AECAF): // short
-            AddValueToTable(table, "value_0", candidate.sValue_0 );
+            AddValueToTable(table, "value_0", QVariant::fromValue(&candidate->sValue_0) );
             break;
         default:
             break;
     }
 }
 
-void CDefInterface::InitializeArguments(QTableWidget* table, StateNode::EventNode event){
-    for (int i = 0; i < event.arguments.size(); i++){
+void CDefInterface::InitializeArguments(QTableWidget* table, StateNode::EventNode* event){
+    for (int i = 0; i < event->arguments.size(); i++){
         QString headerStr =  "arg_" + QString::number(i);
-        CDefInterface::AddValueToTable(table, headerStr, event.arguments[i].index );
+            CDefInterface::AddValueToTable(table, headerStr, QVariant::fromValue(&event->arguments[i].index) );
     }
 }
 
-void CDefInterface::InitializeTriggers(QTableWidget* table, StateNode::EventNode event){
-    for (int i = 0; i < event.triggers.size(); i++){
+void CDefInterface::InitializeTriggers(QTableWidget* table, StateNode::EventNode* event){
+    for (int i = 0; i < event->triggers.size(); i++){
         QString headerStr =  "trig_" + QString::number(i);
-        CDefInterface::AddValueToTable(table, headerStr, event.triggers[i].hash );
-        CDefInterface::AddValueToTable(table, headerStr+" value", event.triggers[i].value );
+        CDefInterface::AddValueToTable(table, headerStr, QVariant::fromValue(&event->triggers[i].hash) );
+        CDefInterface::AddValueToTable(table, headerStr+" value", QVariant::fromValue(&event->triggers[i].value) );
     }
 }
 
-void CDefInterface::BuildEvent(QTableWidget* table, StateNode::EventNode event){
-    if (event.flag){
-        CDefInterface::AddValueToTable(table, "value_2", event.value_2 );
-        CDefInterface::AddValueToTable(table, "value_3", event.value_3 ); }
+void CDefInterface::BuildEvent(QTableWidget* table, StateNode::EventNode* event){
+    if (event->flag){
+        CDefInterface::AddValueToTable(table, "value_2", QVariant::fromValue(&event->value_2) );
+        CDefInterface::AddValueToTable(table, "value_3", QVariant::fromValue(&event->value_3) ); }
     InitializeTriggers(table,event);
     InitializeArguments(table,event);
 }
 
-void CDefInterface::InitializeDESC(StateNode::Node node, QTreeWidgetItem *root){
-    for (const auto &descriptor :node.descriptors ){
+void CDefInterface::InitializeDESC(StateNode::Node* node, QTreeWidgetItem *root){
+    for (std::string descriptor :node->descriptors ){
         DefsTreeWidgetItem *descItem = new DefsTreeWidgetItem(root);
         descItem->setText(0, "DESC Item");
         descItem->setData(0,Qt::UserRole+1, DESC );
         descItem->addDescriptor(descriptor);    }
 }
 
-void CDefInterface::InitializeDESC(StateNode::GroupNode node, QTreeWidgetItem *root){
-    for (const auto &descriptor :node.descriptors ){
+void CDefInterface::InitializeDESC(StateNode::GroupNode* node, QTreeWidgetItem *root){
+    for (std::string descriptor :node->descriptors ){
         DefsTreeWidgetItem *descItem = new DefsTreeWidgetItem(root);
         descItem->setText(0, "DESC Item");
         descItem->setData(0,Qt::UserRole+1, DESC );
@@ -103,13 +118,13 @@ void CDefInterface::InitializeMember(StateNode::GroupNode group, DefsTreeWidgetI
     membItem->setText(0, "MEMB Item");
     membItem->setData(0,Qt::UserRole+1, MEMB );
     membItem->setMemberNode(group.members);
-    for (const auto &frame :group.members.frames ){
+    for (auto &frame :group.members.frames ){
         DefsTreeWidgetItem *frmsItem = new DefsTreeWidgetItem(membItem);
         frmsItem->setText(0, "FRMS Item");
         frmsItem->setData(0,Qt::UserRole+1, FRMS );
         frmsItem->setFrame(frame);
     }
-    for (const auto &candidate :group.members.candidates ){
+    for (auto &candidate :group.members.candidates ){
         DefsTreeWidgetItem *candItem = new DefsTreeWidgetItem(membItem);
         candItem->setText(0, "CAND Item");
         candItem->setData(0,Qt::UserRole+1, CAND );
@@ -121,18 +136,18 @@ void CDefInterface::InitializeSelector(StateNode::GroupNode group, DefsTreeWidge
     DefsTreeWidgetItem *selsItem = new DefsTreeWidgetItem(root);
     selsItem->setText(0, "SELS Item");
     selsItem->setData(0,Qt::UserRole+1, SELS );
-    for (const auto &member :group.selectors.members )
+    for (auto &member :group.selectors.members )
     {
         DefsTreeWidgetItem *membItem = new DefsTreeWidgetItem(selsItem);
         membItem->setText(0, "MEMB Item");
         membItem->setData(0,Qt::UserRole+1, MEMB );
         membItem->setMemberNode(member);
-        for (const auto &frame :group.members.frames ){
+        for (auto &frame :group.members.frames ){
             DefsTreeWidgetItem *frmsItem = new DefsTreeWidgetItem(membItem);
             frmsItem->setText(0, "FRMS Item");
             frmsItem->setData(0,Qt::UserRole+1, FRMS );
             frmsItem->setFrame(frame);  }
-        for (const auto &candidate :group.members.candidates ){
+        for (auto &candidate :group.members.candidates ){
             DefsTreeWidgetItem *candItem = new DefsTreeWidgetItem(membItem);
             candItem->setText(0, "CAND Item");
             candItem->setData(0,Qt::UserRole+1, CAND );
@@ -141,15 +156,15 @@ void CDefInterface::InitializeSelector(StateNode::GroupNode group, DefsTreeWidge
 }
 
 void CDefInterface::InitializeNode(StateNode::Node node, QTreeWidgetItem *root){
-    for (const auto &key:node.keyValueProperties )
+    for (auto &key:node.keyValueProperties )
         if (ntohl(key.streamKey) == 0xBE83F7FD)
             root->setText(0,key.chars.c_str());
-    for (const auto &childNode:node.childNodes )
+    for (auto &childNode:node.childNodes )
         CDefInterface::UI_ConstructStateNode(childNode,root);
 }
 
 void CDefInterface::InitializeSync(StateNode::Node node, QTreeWidgetItem *root){
-    for (const auto &syncNode :node.syncNodes ){
+    for (auto &syncNode :node.syncNodes ){
         DefsTreeWidgetItem *syncItem = new DefsTreeWidgetItem(root);
         syncItem->setText(0, "SYNC Item");
         syncItem->setSyncNode(syncNode);
@@ -157,15 +172,15 @@ void CDefInterface::InitializeSync(StateNode::Node node, QTreeWidgetItem *root){
 }
 
 void CDefInterface::InitializeDTT(StateNode::Node node, QTreeWidgetItem *root){
-    for (const auto &dttNode :node.transNodes ){
+    for (auto &dttNode :node.transNodes ){
         DefsTreeWidgetItem *dttItem = new DefsTreeWidgetItem(root);
-        dttItem->setText(0, "DTT_ Item");
+        dttItem->setText(0, "DTT Item");
         dttItem->setStateNode(dttNode);
         dttItem->setData(0,Qt::UserRole+1, DTT_ );  }
 }
 
 void CDefInterface::InitializeTOVR(StateNode::Node node, QTreeWidgetItem *root){
-    for (const auto &ovlyNode :node.ovlyNodes ){
+    for (auto &ovlyNode :node.ovlyNodes ){
         DefsTreeWidgetItem *ovlyItem = new DefsTreeWidgetItem(root);
         ovlyItem->setText(0, "TOVR Item");
         ovlyItem->setStateNode(ovlyNode);
@@ -187,7 +202,7 @@ void CDefInterface::UI_ConstructGroupNode(StateNode::GroupNode group, QTreeWidge
     item->setText(0, "GROUP: " + QString(group.chars.c_str()) );
     item->setData(0,Qt::UserRole+1, GRP_ );
     item->setGroupNode(group);
-    InitializeDESC(group,item);
+    InitializeDESC(&group,item);
     InitializeMember(group,item);
     InitializeSelector(group,item);
 }
@@ -203,7 +218,7 @@ void CDefInterface::UI_ConstructStateNode(StateNode::Node node, QTreeWidgetItem 
     InitializeSync(node,item);
     InitializeDTT(node,item);
     InitializeTOVR(node,item);
-    InitializeDESC(node,item);
+    InitializeDESC(&node,item);
     InitializeEvent(node,item);;
 }
 
@@ -221,52 +236,50 @@ void CDefInterface::UI_ConstructNewDefinition(QTreeWidget* tree, StateNode::Defi
 {
     DefsTreeWidgetItem *rootParent = new DefsTreeWidgetItem(tree);
     //Construct State sets
-    for (const auto &stateNode:animDef.stateNodes )
+    for (auto &stateNode:animDef.stateNodes )
         CDefInterface::UI_ConstructStateNode(stateNode,rootParent);
     //Construct Group sets
-    for (const auto &groupNode:animDef.groupNodes )
+    for (auto &groupNode:animDef.groupNodes )
         CDefInterface::UI_ConstructGroupNode(groupNode,rootParent);
     rootParent->setText(0, "Definition #" + QString::number(defIndex) );
 }
 
 
 void CDefInterface::UI_Table_BuildSYNC(QTableWidget* table, DefsTreeWidgetItem* item){
-    CDefInterface::AddValueToTable(table, "flag", item->getSyncNode().flag);
-    CDefInterface::AddValueToTable(table, "value_0", item->getSyncNode().valueA);
-    CDefInterface::AddValueToTable(table, "value_1", item->getSyncNode().valueB);
+    CDefInterface::AddValueToTable(table, "flag", QVariant::fromValue(&item->getSyncNode()->flag));
+    CDefInterface::AddValueToTable(table, "value_0",QVariant::fromValue(&item->getSyncNode()->valueA));
+    CDefInterface::AddValueToTable(table, "value_1", QVariant::fromValue(&item->getSyncNode()->valueB));
 }
 
 void CDefInterface::UI_Table_BuildDESC(QTableWidget* table, DefsTreeWidgetItem* item){
-    for (const auto& descriptor : item->getDescriptors() )
-         CDefInterface::AddValueToTable(table, "desc", QString(descriptor.c_str()) );
+    for ( std::string descriptor : item->getDescriptors() )
+         CDefInterface::AddValueToTable(table, "desc", QVariant::fromValue(descriptor));
 }
 void CDefInterface::UI_Table_BuildFRMS(QTableWidget* table, DefsTreeWidgetItem* item){
-    CDefInterface::AddValueToTable(table, "value_0", item->getFrame().value );
-    CDefInterface::AddValueToTable(table, "value_1", item->getFrame().flag);
+    CDefInterface::AddValueToTable(table, "value_0", QVariant::fromValue(&item->getFrame()->value ));
+    CDefInterface::AddValueToTable(table, "value_1", QVariant::fromValue(&item->getFrame()->flag));
 }
 
 void CDefInterface::UI_Table_BuildNODE(QTableWidget* table, DefsTreeWidgetItem* item){
-    StateNode::Node node =  item->getStateNode();
-    for (const auto& prop : node.keyValueProperties){
+    StateNode::Node* node =  item->getStateNode();
+    for ( auto& prop : node->keyValueProperties){
         QString key = FormatKeyValueString(prop);
-        QString value = FormatKeyValueString(prop,true);
-        CDefInterface::AddValueToTable(table, key, value ); }
+        CDefInterface::AddValueToTable(table, key, GetItemVariant(&prop) ); }
 
-    if (node.streamType == 0x2){
-        AddValueToTable(table,"value",node.value_0);
-        AddValueToTable(table,"value",node.value_1);
-        AddValueToTable(table,"value",node.floatVal); }
-    if (node.streamType == 0x1){ AddValueToTable(table,"flag",node.flag); }
-    if (node.isBargNode){
-        AddValueToTable(table,"value",node.value_1);
-        AddValueToTable(table,"value",node.floatVal);  }
+    if (node->streamType == 0x2){
+        AddValueToTable(table,"int value",QVariant::fromValue(&node->value_0));
+        AddValueToTable(table,"long value",QVariant::fromValue(&node->value_1));
+        AddValueToTable(table,"float value",QVariant::fromValue(&node->floatVal)); }
+    if (node->streamType == 0x1){ AddValueToTable(table,"flag",QVariant::fromValue(&node->flag)); }
+    if (node->isBargNode){
+        AddValueToTable(table,"long value",QVariant::fromValue(&node->value_1));
+        AddValueToTable(table,"float value",QVariant::fromValue(&node->floatVal));  }
 }
 
 void CDefInterface::UI_Table_BuildKeyValue(QTableWidget* table, DefsTreeWidgetItem* item){
-    for (const auto& prop : item->getStateNode().keyValueProperties){
+    for ( auto& prop : item->getStateNode()->keyValueProperties){
         QString key = FormatKeyValueString(prop);
-        QString value = FormatKeyValueString(prop,true);
-        CDefInterface::AddValueToTable(table, key, value ); }
+        CDefInterface::AddValueToTable(table, key, GetItemVariant(&prop) ); }
 }
 
 
