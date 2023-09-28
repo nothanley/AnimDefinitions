@@ -5,9 +5,9 @@
 #include <QStandardPaths>
 #include "QFileDialog"
 #include "QDebug"
-#include "DefsTreeWidgetItem.h"
+#include "Interface/DefsTreeWidgetItem.h"
 #include "DefsTableUtils.h"
-#include "LabelTreeItemDelegate.h"
+#include "Interface/LabelTreeItemDelegate.h"
 #pragma once
 
 QT_BEGIN_NAMESPACE
@@ -33,12 +33,12 @@ private slots:
     void on_TableWidget_Defs_itemChanged(QTableWidgetItem *item);
     void RefreshTableTreeSync();
     void on_TableWidget_Defs_cellDoubleClicked(int row, int column);
-
+    void UpdateFileStatsLabels();
 private:
     Ui::MainWindow *ui;
     std::vector<StateNode::Definition> m_AnimDefinitions;
     QString m_DefsFilePath = "";
-    bool ignoreTableUpdate = false;
+    bool updateTable = false;
 };
 
 #endif // MAINWINDOW_H

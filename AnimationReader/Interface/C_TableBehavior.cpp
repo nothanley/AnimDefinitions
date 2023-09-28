@@ -1,94 +1,95 @@
 #include "C_TableBehavior.h"
 #include <sstream>
 
-void FilterHeaderString(QString* string){
-    string->remove("\"");
-    string->remove(" :");
-    string->remove(" ");
+
+void UpdateUint64Ptr(SyncedTableWidgetItem* tableItem){
+    bool ok;
+    uint64_t* num = qvariant_cast<uint64_t*>(tableItem->getNodeProperty());
+    uint64_t number = tableItem->text().toULongLong(&ok, 16);
+    if (ok){ *num  = number; }
 }
 
-int FindPropertyIndex(std::vector<KeyValueProp> properties, uint32_t key){
-    for (int i = 0; i < properties.size(); i++)
-        if (properties[i].streamKey == key)
-            return i;
-    return -1;
-}
-uint32_t HexStringToUInt32(const std::string& hexString) {
-    std::istringstream stream(hexString);
-    uint32_t result = 0;
-    stream >> std::hex >> result;
-    return result;
+void UpdateBoolPtr(SyncedTableWidgetItem* tableItem){
+    bool* num = qvariant_cast<bool*>(tableItem->getNodeProperty());
+    if (tableItem->text() != "true" && tableItem->text() != "false"){ return; }
+    *num = (tableItem->text() == "true") ? true : false;
 }
 
-void UpdateKeyProperty(StateNode::Node* node, uint32_t key, QString value, QTableWidgetItem* item){
-    std::vector<KeyValueProp> properties = node->keyValueProperties;
-    int index = FindPropertyIndex(properties,key);
-    if(index == -1){ qDebug() << "No Key Found."; return;}
-    switch(ntohl(key)){
-        case(0xBE83F7FD):
-            properties[index].chars = value.toStdString();
-            break;
-        default:
-            break;
-    }
-    node->keyValueProperties = properties;
+void UpdateFloatPtr(SyncedTableWidgetItem* tableItem){
+    bool ok;
+    float* num = qvariant_cast<float*>(tableItem->getNodeProperty());
+    float number = tableItem->text().toFloat(&ok);
+    if (ok){ *num  = number; }
 }
-void CTableBehavior::UpdateNode(DefsTreeWidgetItem* item,
-                                QTableWidgetItem* tableItem, QString header){
-    FilterHeaderString(&header);
-    qDebug() << "\nHeader: " << header;
-    uint32_t streamKey = HexStringToUInt32(header.toStdString());
-    StateNode::Node* node = item->getStateNode();
-    UpdateKeyProperty(node, streamKey, tableItem->text(),tableItem);
-}
-void CTableBehavior::UpdateState(DefsTreeWidgetItem* item,
-                                 QTableWidgetItem* tableItem, QString header){
 
+void UpdateUint32Ptr(SyncedTableWidgetItem* tableItem){
+    bool ok;
+    uint32_t* num = qvariant_cast<uint32_t*>(tableItem->getNodeProperty());
+    uint32_t number = tableItem->text().toUInt(&ok);
+    if (ok){ *num  = number; }
 }
-void CTableBehavior::UpdateMember(DefsTreeWidgetItem* item,
-                                  QTableWidgetItem* tableItem, QString header){
 
+void UpdateUint16Ptr(SyncedTableWidgetItem* tableItem){
+    bool ok;
+    uint16_t* num = qvariant_cast<uint16_t*>(tableItem->getNodeProperty());
+    uint16_t number = tableItem->text().toUInt(&ok);
+    if (ok){ *num  = number; }
 }
-void CTableBehavior::UpdateEvent(DefsTreeWidgetItem *item,
-                                 QTableWidgetItem* tableItem, QString header){
 
+void UpdateInt32Ptr(SyncedTableWidgetItem* tableItem){
+    bool ok;
+    int32_t* num = qvariant_cast<int32_t*>(tableItem->getNodeProperty());
+    int32_t number = tableItem->text().toUInt(&ok);
+    if (ok){ *num  = number; }
 }
-void CTableBehavior::UpdateFrame(DefsTreeWidgetItem* item,
-                                 QTableWidgetItem* tableItem, QString header){
 
+void UpdateQStringPtr(SyncedTableWidgetItem* tableItem){
+    QString* num = qvariant_cast<QString*>(tableItem->getNodeProperty());
+    *num = tableItem->text();
 }
-void CTableBehavior::UpdateCandidate(DefsTreeWidgetItem* item,
-                                     QTableWidgetItem* tableItem, QString header){
 
+void CTableBehavior::UpdateStdStringPtr(SyncedTableWidgetItem* tableItem){
+    std::string* t = qvariant_cast<std::string*>(tableItem->getNodeProperty());
+    *t = tableItem->text().toStdString();
+}
+
+void UpdateStdString(SyncedTableWidgetItem* tableItem){
+    std::string t = qvariant_cast<std::string>(tableItem->getNodeProperty());
+    t = tableItem->text().toStdString();
 }
 void CTableBehavior::UpdateTableWithNode(DefsTreeWidgetItem* item,
                                          QTableWidgetItem* tableItem, uint32_t type, QString header)
 {
-    switch(type){
-        case(STAT):
+    SyncedTableWidgetItem *syncItem = dynamic_cast<SyncedTableWidgetItem*>(tableItem);
+    if (!tableItem){ return; }
+    switch (tableItem->data(Qt::UserRole).toUInt())
+    {
+        case(0x1):
+            UpdateUint64Ptr(syncItem);
             break;
-        case(NODE):
-            UpdateNode(item,tableItem,header);
+        case(0x2):
+            UpdateBoolPtr(syncItem);
             break;
-        case(SYNC):
+        case(0x3):
+            UpdateFloatPtr(syncItem);
             break;
-        case(DTT_):
+        case(0x4):
+            UpdateUint32Ptr(syncItem);
             break;
-        case(TOVR):
+        case(0x5):
+            UpdateUint16Ptr(syncItem);
             break;
-        case(DESC):
+        case(0x6):
+            UpdateInt32Ptr(syncItem);
             break;
-        case(EVNT):
+        case(0x7):
+            UpdateQStringPtr(syncItem);
             break;
-        case(GRP_):
+        case(0x8):
+            UpdateStdStringPtr(syncItem);
             break;
-        case(MEMB):
-            break;
-        case(SELS):
-            break;
-        case(FRMS):
-            break;
-        case(CAND):
+        case(0x9):
+            UpdateStdString(syncItem);
             break;
         default:
             break;

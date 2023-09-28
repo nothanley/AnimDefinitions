@@ -1,18 +1,19 @@
-#include <QDebug>
+
 #include <QTableWidget>
 #include "AnimDefinitions/AnimDefHandler.h"
 #include "DefsTreeWidgetItem.h"
-#include "AnimDefinitions/C_SyncedTableWidgetItem.h"
+#include "TypeHandler.h"
 #pragma once
 
 class CDefInterface
 {
 private:
+
     static void InitializeArguments(QTableWidget* table, StateNode::EventNode* event);
     static void InitializeTriggers(QTableWidget* table, StateNode::EventNode* event);
     static void BuildEvent(QTableWidget* table, StateNode::EventNode* event);
-    static void InitializeDESC(StateNode::Node node, QTreeWidgetItem *root);
-    static void InitializeDESC(StateNode::GroupNode node, QTreeWidgetItem *root);
+    static void InitializeDESC(StateNode::Node* node, QTreeWidgetItem *root);
+    static void InitializeDESC(StateNode::GroupNode* node, QTreeWidgetItem *root);
     static void InitializeMember(StateNode::GroupNode group, DefsTreeWidgetItem *root);
     static void InitializeSelector(StateNode::GroupNode group, DefsTreeWidgetItem *root);
     static void InitializeNode(StateNode::Node node, QTreeWidgetItem *root);
@@ -35,53 +36,7 @@ public:
     static void UI_ConstructDefsTree(QTreeWidget* tree, QTableWidget*table, std::vector<StateNode::Definition> defs);
     static void UI_ConstructNewDefinition(QTreeWidget* tree,StateNode::Definition animDef, int defIndex);
 
-    template <typename T>
-    static void AddValueToTable(QTableWidget* tableWidget, QString header, QVariant* value)
-    {
-        int rowTotal = tableWidget->rowCount() + 1;
-        tableWidget->setRowCount(rowTotal);
-        header = header.contains("\"") ? header : "\"" + header + "\" :";
-        tableWidget->setItem(rowTotal - 1, 0, new QTableWidgetItem(header));
-        SyncedTableWidgetItem* tableItem = new SyncedTableWidgetItem();
-
-        tableItem->setData(Qt::UserRole, 0x9);
-        // Populate these props
-        switch (variant.userType())
-        {
-        case QMetaType::Int:
-        case QMetaType::UInt:
-        case QMetaType::LongLong:
-        case QMetaType::ULongLong:
-            return true;
-        }
-
-        if constexpr (std::is_same<T, QString>::value) {
-            value->value<T>
-            tableItem->setNodeProperty(value);
-            if (value.contains("\"")){tableItem->setData(Qt::UserRole, 0x1);}
-            else if (value == "true" || value == "false"){tableItem->setData(Qt::UserRole, 0x2);}
-            else{tableItem->setData(Qt::UserRole, 0x0);}
-        } else if constexpr (std::is_same<T, uint64_t>::value) {
-            tableItem->setNodeProperty( value );
-            tableItem->setData(Qt::UserRole, 0x1);
-        } else if constexpr (std::is_same<T, bool>::value) {
-            tableItem->setNodeProperty(value);
-            tableItem->setData(Qt::UserRole, 0x2);
-        } else if constexpr (std::is_same<T, float>::value) {
-            tableItem->setNodeProperty(value);
-            tableItem->setData(Qt::UserRole, 0x3);
-        } else if constexpr (std::is_same<T, uint32_t>::value) {
-            tableItem->setNodeProperty(value);
-            tableItem->setData(Qt::UserRole, 0x4);
-        } else if constexpr (std::is_same<T, uint16_t>::value) {
-            tableItem->setNodeProperty(value);
-            tableItem->setData(Qt::UserRole, 0x5);
-        }
-        else{ qDebug() << "[DEBUG] No var type"; return; }
-
-        tableItem->setText("");
-        tableWidget->setItem(rowTotal - 1, 1, tableItem);
-    }
+    static void AddValueToTable(QTableWidget* tableWidget, QString header, QVariant value);
 
 };
 

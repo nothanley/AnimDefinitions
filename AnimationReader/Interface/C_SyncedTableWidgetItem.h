@@ -13,14 +13,12 @@ public:
 
     SyncedTableWidgetItem(const QTableWidgetItem &other) : QTableWidgetItem(other){}
 
-    virtual ~SyncedTableWidgetItem();
+    void setNodeProperty(QVariant prop){ this->m_NodeProperty = prop;}
 
-    void setNodeProperty(QVariant* prop){ this->m_NodeProperty = prop;}
-
-    QVariant* getNodeProperty(){ return this->m_NodeProperty; }
+    QVariant getNodeProperty(){ return this->m_NodeProperty; }
 
 private:
-    QVariant* m_NodeProperty = nullptr;
+    QVariant m_NodeProperty;
 };
 
 #endif // C_SYNCEDTABLEWIDGETITEM_H
