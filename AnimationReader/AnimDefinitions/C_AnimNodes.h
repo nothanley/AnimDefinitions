@@ -100,7 +100,7 @@ namespace StateNode {
 		uint32_t nodeType; // Differentiates DTT, Node, GroupNode &, EventNode types
         std::vector<KeyValueProp> keyValueProperties;
 		std::vector<SyncNode> syncNodes;
-		std::vector<Node> transNodes;
+        std::vector<Node> transNodes;
 		std::vector<Node> ovlyNodes;
 		std::vector<Node> childNodes;
 		std::vector<std::string> descriptors;
@@ -111,6 +111,8 @@ namespace StateNode {
         uint64_t value_1;
         bool flag = false;
         float floatVal;
+        uint64_t barg_longlong;
+        float barg_float;
 	};
 
 	struct Definition {

@@ -21,7 +21,7 @@ private:
 
 	Node ProcessNode(bool isChild=false);
 
-	Node ProcessTransNode();
+    std::vector<Node> ProcessTransNode();
 
     void ProcessBargNode(Node *parentNode);
 
