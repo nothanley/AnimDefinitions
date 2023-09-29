@@ -30,7 +30,7 @@ void EncodeSyncNode(ofstream* stream,StateNode::Node definition){
         WriteUInt64(stream,node.valueB);
         WriteBool(stream,node.flag);
     }
-    WriteUInt64(stream,0x0); // const 0x0
+    WriteUInt64(stream,definition.syncGlobal);
 }
 
 void EncodeDTTs(ofstream* stream,std::vector<Node> dttNodes){
@@ -45,33 +45,6 @@ void EncodeTOVR(ofstream* stream,std::vector<Node> tovrNodes){
     for (auto const& node : tovrNodes){
         EncodeKeyValueStream(stream,node.keyValueProperties);
     }
-}
-
-void EncodeBargStream(ofstream* stream,Node node){
-    EncodeStreamMagic(stream,"barg",node.childNodes.size());
-    for (auto const& child : node.childNodes){
-        WriteUInt64(stream,child.barg_longlong);
-        WriteFloat(stream,child.barg_float);
-        CDefinitionEncoder::WriteNodeStream(stream,child);
-    }
-}
-
-void EncodeChildNode(ofstream* stream, std::vector<Node> nodes){
-    for (auto const& node : nodes){
-        CDefinitionEncoder::WriteNodeStream(stream,node);
-        EncodeChildNode(stream,node.childNodes);
-    }
-}
-
-void EncodeNodeStream(ofstream*stream,vector<Node> nodes){
-    WriteSignature(stream,"node");
-    EncodeChildNode(stream,nodes);
-}
-
-void EncodeDescriptors(ofstream* stream, std::vector<string> descs){
-    EncodeStreamMagic(stream,"desc",descs.size());
-    for (auto const& desc : descs)
-        WriteChars(stream,desc);
 }
 
 void EncodeTriggers(ofstream* stream, std::vector<EventTrigger> trigs){
@@ -93,11 +66,63 @@ void EncodeEvents(ofstream* stream, std::vector<EventNode> events){
         WriteUInt64(stream,event.value_0);
         WriteUInt32(stream,event.value_1);
         WriteBool(stream,event.flag);
-        if (event.flag){
+        if (!event.flag){
             WriteUInt32(stream,event.value_2);
             WriteUInt64(stream,event.value_3); }
         EncodeTriggers(stream,event.triggers);
         EncodeArguments(stream,event.arguments);    }
+}
+
+
+void EncodeBargStream(ofstream* stream,Node node){
+    EncodeStreamMagic(stream,"barg",node.childNodes.size());
+    for (auto const& child : node.childNodes){
+        WriteUInt64(stream,child.barg_longlong);
+        WriteFloat(stream,child.barg_float);
+        CDefinitionEncoder::WriteNodeStream(stream,child);
+    }
+}
+
+void EncodeChildNode(ofstream* stream, std::vector<Node> nodes){
+    for (auto const& node : nodes){
+        CDefinitionEncoder::WriteNodeStream(stream,node);
+    }
+}
+
+void EncodeNodeStream(ofstream*stream,vector<Node> nodes){
+    WriteSignature(stream,"node");
+    EncodeChildNode(stream,nodes);
+}
+
+void EncodeDescriptors(ofstream* stream, std::vector<string> descs){
+    EncodeStreamMagic(stream,"desc",descs.size());
+    for (auto const& desc : descs)
+        WriteChars(stream,desc);
+}
+
+
+void WriteNodeType1(ofstream* stream, Node node){
+    WriteBool(stream,node.flag);
+    EncodeKeyValueStream(stream,node.keyValueProperties,true);
+}
+
+void WriteNodeType2(ofstream* stream, Node node){
+    WriteInt32(stream,node.value_0);
+    EncodeKeyValueStream(stream,node.keyValueProperties,true);
+    WriteUInt64(stream,node.value_1);
+    WriteFloat(stream,node.floatVal);
+    EncodeBargStream(stream,node);
+}
+
+void CDefinitionEncoder::WriteNodeStream(ofstream* stream, Node node){
+    WriteUInt32(stream,node.streamType);
+    switch(node.streamType){
+    case(0x2):
+        WriteNodeType2(stream,node);
+        break;
+    case(0x1):
+        WriteNodeType1(stream,node);
+        break;}
 }
 
 void EncodeStateNode(ofstream* stream,StateNode::Node state){
@@ -164,34 +189,12 @@ void EncodeDefinition(ofstream* stream,StateNode::Definition definition){
 void CDefinitionEncoder::EncodeAllDefinitions(){
     EncodeStreamMagic(fs,"adef",this->m_Definitions->size());
     /* Iterate through all defs and encode */
-     for (auto const& definition : *m_Definitions){
-        EncodeDefinition(fs,definition);  }
+    for (int i = 0; i < m_Definitions->size(); i++){
+        EncodeDefinition(fs,m_Definitions->at(i));  }
+//     for (auto const& definition : *m_Definitions){
+//        EncodeDefinition(fs,definition);  }
 }
 
-
-void WriteNodeType1(ofstream* stream, Node node){
-    WriteBool(stream,node.flag);
-    EncodeKeyValueStream(stream,node.keyValueProperties,true);
-}
-
-void WriteNodeType2(ofstream* stream, Node node){
-    WriteInt32(stream,node.value_0);
-    EncodeKeyValueStream(stream,node.keyValueProperties,true);
-    WriteUInt64(stream,node.value_1);
-    WriteFloat(stream,node.floatVal);
-    EncodeBargStream(stream,node);
-}
-
-void CDefinitionEncoder::WriteNodeStream(ofstream* stream, Node node){
-    WriteUInt32(stream,node.streamType);
-    switch(node.streamType){
-        case(0x2):
-            WriteNodeType2(stream,node);
-            break;
-        case(0x1):
-            WriteNodeType1(stream,node);
-            break;}
-}
 
 void CDefinitionEncoder::WriteCandidateStream(ofstream* stream, StateNode::MemberNode member){
 
@@ -213,7 +216,7 @@ void CDefinitionEncoder::WriteCandidateStream(ofstream* stream, StateNode::Membe
             break;
         case(0x2F05210F):
             for (auto const& candidate : member.candidates){
-                WriteFloat(stream,candidate.sValue_0);
+                WriteUInt16(stream,candidate.sValue_0);
                 WriteFloat(stream,candidate.fValue_0);
                 WriteFloat(stream,candidate.fValue_1);  }
             WriteUInt64(stream,member.lValue_0);

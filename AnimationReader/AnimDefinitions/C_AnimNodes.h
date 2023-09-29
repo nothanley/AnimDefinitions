@@ -113,6 +113,7 @@ namespace StateNode {
         float floatVal;
         uint64_t barg_longlong;
         float barg_float;
+        uint64_t syncGlobal;
 	};
 
 	struct Definition {

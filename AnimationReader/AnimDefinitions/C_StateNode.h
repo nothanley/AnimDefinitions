@@ -25,7 +25,7 @@ private:
 
     void ProcessBargNode(Node *parentNode);
 
-    std::vector<SyncNode> ProcessSyncNode();
+    std::vector<SyncNode> ProcessSyncNode(StateNode::Node* node);
 
     std::vector<std::string> ProcessDescriptor();
 
@@ -42,6 +42,8 @@ private:
 	MemberNode ProcessMembers();
 
 	SelectorNode ProcessSelectors();
+
+    void getSyncNodes(StateNode::Node* state);
 
 public:
 

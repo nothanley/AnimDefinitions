@@ -1,6 +1,5 @@
 #include "C_StateNode.h"
 
-
 void C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDefCollection)
 {
 	// Initializes a Definition obj containing State & Group Nodes
@@ -13,7 +12,7 @@ void C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDef
 	for (int i = 0; i < numStates; i++) {
 		Node stateNode{ STAT };
         stateNode.keyValueProperties = ReadKeyValueProperty(false);
-		stateNode.syncNodes = ProcessSyncNode();
+        stateNode.syncNodes = ProcessSyncNode(&stateNode);
         stateNode.transNodes = ProcessTransNode();
         stateNode.ovlyNodes = ProcessTransNode();
 		stateNode.childNodes.push_back( ProcessNode() );
@@ -109,7 +108,7 @@ std::vector<Node> C_StateNode::ProcessTransNode()
 }
 
 
-std::vector<SyncNode> C_StateNode::ProcessSyncNode()
+std::vector<SyncNode> C_StateNode::ProcessSyncNode(StateNode::Node* node)
 {
 	uint32_t streamSig = ReadUInt32(*fs);
 	std::vector<SyncNode> syncNodes;
@@ -123,7 +122,7 @@ std::vector<SyncNode> C_StateNode::ProcessSyncNode()
         syncNodes.push_back(sNode);
 	}
 
-	ReadUInt64(*fs); // 0x0 constant
+    node->syncGlobal = ReadUInt64(*fs);
 	return syncNodes;
 }
 
