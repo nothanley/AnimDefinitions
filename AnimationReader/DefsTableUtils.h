@@ -26,6 +26,7 @@ static QVariant GetItemVariant( StateNode::KeyValueProp* kvElement)
             return QVariant::fromValue(&kvElement->flag);
             break;
         case (0xDF4B0B8E):
+            if (kvElement->val64 == 0x0){ return QVariant::fromValue(&kvElement->chars);}
             return QVariant::fromValue(&kvElement->val64);
             break;
         case (0x60C09DC4):

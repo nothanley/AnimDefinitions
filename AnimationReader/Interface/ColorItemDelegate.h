@@ -14,47 +14,56 @@ public:
 
     void DisplayUInt64(QString* tableDisplayString, QVariant type, QPainter *painter) const{
          painter->setPen(QColor(98, 230, 232));
+         if (!type.isValid() || type.isNull()){ return;}
          uint64_t* value = qvariant_cast<uint64_t *>(type);
          *tableDisplayString = "\""+QString::number(*value,16)+"\"";
     }
     void DisplayBool(QString* tableDisplayString, QVariant type, QPainter *painter) const{
          painter->setPen(QColor(242,138,2));
+         if (!type.isValid() || type.isNull()){ return;}
          bool* value = qvariant_cast<bool *>(type);
          *tableDisplayString = bool(*value) ? "true" : "false";
     }
     void DisplayFloat(QString* tableDisplayString, QVariant type, QPainter *painter) const{
          painter->setPen(QColor(219, 106, 134));
+         if (!type.isValid() || type.isNull()){ return;}
          double value = static_cast<double> ((float)*qvariant_cast<float *>(type));
          *tableDisplayString = (std::floor(value) == value) ?
                      QString::number(value,'f',2) : QString::number(value,'f');
     }
     void DisplayUInt32(QString* tableDisplayString, QVariant type, QPainter *painter) const{
          painter->setPen(QColor(52, 171, 241));
+         if (!type.isValid() || type.isNull()){ return;}
          uint32_t* value = qvariant_cast<uint32_t *>(type);
          *tableDisplayString = QString::number(*value);
     }
     void DisplayUInt16(QString* tableDisplayString, QVariant type, QPainter *painter) const{
          painter->setPen(QColor(52, 171, 241));
+         if (!type.isValid() || type.isNull()){ return;}
          uint16_t* value = qvariant_cast<uint16_t *>(type);
          *tableDisplayString = QString::number(*value);
     }
     void DisplayInt32(QString* tableDisplayString, QVariant type, QPainter *painter) const{
          painter->setPen(QColor(52, 171, 241));
+         if (!type.isValid() || type.isNull()){ return;}
          int32_t* value = qvariant_cast<int32_t *>(type);
          *tableDisplayString = QString::number(*value);
     }
     void DisplayQString(QString* tableDisplayString, QVariant type, QPainter *painter) const{
          painter->setPen(QColor(105, 221, 166));
+         if (!type.isValid() || type.isNull()){ return;}
          QString* value = qvariant_cast<QString*>(type);
          *tableDisplayString = QString(*value);
     }
     void DisplayStdStringPtr(QString* tableDisplayString, QVariant type, QPainter *painter) const{
          painter->setPen(QColor(105, 221, 166));
+         if (!type.isValid() || type.isNull()){ return;}
          std::string* value = qvariant_cast<std::string *>(type);
          *tableDisplayString = QString::fromStdString(*value);
     }
     void DisplayStdString(QString* tableDisplayString, QVariant type, QPainter *painter) const{
         painter->setPen(QColor(105, 221, 166));
+        if (!type.isValid() || type.isNull()){ return;}
         std::string value = qvariant_cast<std::string>(type);
         *tableDisplayString = QString::fromStdString(value);
     }

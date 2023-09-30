@@ -2,6 +2,15 @@
 #include <QDebug>
 using namespace std;
 
+void CDefinitionEncoder::WriteToFileWithStream(string filePath, std::vector<char>* stream /* Includes all non adef buffers */){
+    ofstream outfile(filePath.c_str(), ios::binary);
+    if (!outfile) { cout << "Invalid outfile"; return;} // Check if valid file
+    this->fs = &outfile;
+    fs->write(stream->data(),stream->size());
+    EncodeAllDefinitions();
+    this->fs->close();
+}
+
 void CDefinitionEncoder::WriteToFile(string filePath){
     ofstream outfile(filePath.c_str(), ios::binary);
     if (!outfile) { cout << "Invalid outfile"; return;} // Check if valid file

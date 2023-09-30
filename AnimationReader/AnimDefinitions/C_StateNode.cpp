@@ -1,41 +1,39 @@
 #include "C_StateNode.h"
 
-void C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDefCollection)
-{
-	// Initializes a Definition obj containing State & Group Nodes
-	StateNode::Definition animDef;
+void C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDefCollection){    // Initializes a Definition obj containing State & Group Nodes
+    StateNode::Definition animDef;
+    CollectStateNodes(&animDef);    /* Iterate through all State Nodes.*/
+    CollectGroupNodes(&animDef);   /* Iterate through all Group Nodes.*/
+    aDefCollection.push_back(animDef);
+}
 
-	/* Iterate through all State Nodes. Assess stream format*/
-	uint32_t STATMagic = ReadUInt32(*fs);
-	uint32_t numStates = ReadUInt32(*fs);
+void C_StateNode::CollectGroupNodes(StateNode::Definition *animDef){
+    uint32_t GRPMagic = ReadUInt32(*fs);
+    uint32_t numGroups = ReadUInt32(*fs);
+    for (int i = 0; i < numGroups; i++) {
+        GroupNode group;
+        group.chars = ReadString(*fs, ReadUInt32(*fs));
+        group.descriptors = ProcessDescriptor();
+        group.members = ProcessMembers();
+        group.selectors = ProcessSelectors();
+        animDef->groupNodes.push_back(group);}
+}
 
-	for (int i = 0; i < numStates; i++) {
-		Node stateNode{ STAT };
+void C_StateNode::CollectStateNodes(StateNode::Definition* animDef){
+    uint32_t STATMagic = ReadUInt32(*fs);
+    uint32_t numStates = ReadUInt32(*fs);
+    for (int i = 0; i < numStates; i++){
+        Node stateNode{ STAT };
         stateNode.keyValueProperties = ReadKeyValueProperty(false);
         stateNode.syncNodes = ProcessSyncNode(&stateNode);
         stateNode.transNodes = ProcessTransNode();
         stateNode.ovlyNodes = ProcessTransNode();
-		stateNode.childNodes.push_back( ProcessNode() );
-		stateNode.descriptors = ProcessDescriptor();
-        stateNode.events = ProcessSMEvents(); // todo: collect this
-		animDef.stateNodes.push_back(stateNode);
-	}
-
-	/* Iterate through all Group Nodes. Assess stream formats*/
-	uint32_t GRPMagic = ReadUInt32(*fs);
-	uint32_t numGroups = ReadUInt32(*fs);
-
-	for (int i = 0; i < numGroups; i++) {
-		GroupNode group;
-		group.chars = ReadString(*fs, ReadUInt32(*fs));
-		group.descriptors = ProcessDescriptor();
-		group.members = ProcessMembers();
-		group.selectors = ProcessSelectors();
-		animDef.groupNodes.push_back(group);
-	}
-
-	aDefCollection.push_back(animDef);
+        stateNode.childNodes.push_back( ProcessNode() );
+        stateNode.descriptors = ProcessDescriptor();
+        stateNode.events = ProcessSMEvents();
+        animDef->stateNodes.push_back(stateNode);}
 }
+
 
 void C_StateNode::ProcessBargNode(Node *parentNode){
     //Process 'BARG' stream

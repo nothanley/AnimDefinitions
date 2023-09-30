@@ -1,5 +1,7 @@
 #include "C_DefInterface.h"
 #include "DefsTableUtils.h"
+#include "Hash/hash.h"
+#include <QPushButton>
 #pragma once
 
 void CDefInterface::AddValueToTable(QTableWidget *tableWidget, QString header, QVariant value)
@@ -90,6 +92,7 @@ void CDefInterface::InitializeTriggers(QTableWidget* table, StateNode::EventNode
 }
 
 void CDefInterface::BuildEvent(QTableWidget* table, StateNode::EventNode* event){
+    if (!event){return;}
     if (event->flag){
         CDefInterface::AddValueToTable(table, "value_2", QVariant::fromValue(&event->value_2) );
         CDefInterface::AddValueToTable(table, "value_3", QVariant::fromValue(&event->value_3) ); }
@@ -98,149 +101,152 @@ void CDefInterface::BuildEvent(QTableWidget* table, StateNode::EventNode* event)
 }
 
 void CDefInterface::InitializeDESC(StateNode::Node* node, QTreeWidgetItem *root){
-    for (std::string descriptor :node->descriptors ){
+    for (std::string &descriptor :node->descriptors ){
         DefsTreeWidgetItem *descItem = new DefsTreeWidgetItem(root);
         descItem->setText(0, "DESC Item");
         descItem->setData(0,Qt::UserRole+1, DESC );
-        descItem->addDescriptor(descriptor);    }
+        descItem->addDescriptor(&descriptor);    }
 }
 
 void CDefInterface::InitializeDESC(StateNode::GroupNode* node, QTreeWidgetItem *root){
-    for (std::string descriptor :node->descriptors ){
+    for (std::string &descriptor :node->descriptors ){
         DefsTreeWidgetItem *descItem = new DefsTreeWidgetItem(root);
         descItem->setText(0, "DESC Item");
         descItem->setData(0,Qt::UserRole+1, DESC );
-        descItem->addDescriptor(descriptor);    }
+        descItem->addDescriptor(&descriptor);    }
 }
 
-void CDefInterface::InitializeMember(StateNode::GroupNode group, DefsTreeWidgetItem *root){
+void CDefInterface::InitializeMember(StateNode::GroupNode* group, DefsTreeWidgetItem *root){
     DefsTreeWidgetItem *membItem = new DefsTreeWidgetItem(root);
     membItem->setText(0, "MEMB Item");
     membItem->setData(0,Qt::UserRole+1, MEMB );
-    membItem->setMemberNode(group.members);
-    for (auto &frame :group.members.frames ){
+    membItem->setMemberNode(&group->members);
+    for (auto &frame :group->members.frames ){
         DefsTreeWidgetItem *frmsItem = new DefsTreeWidgetItem(membItem);
         frmsItem->setText(0, "FRMS Item");
         frmsItem->setData(0,Qt::UserRole+1, FRMS );
-        frmsItem->setFrame(frame);
+        frmsItem->setFrame(&frame);
     }
-    for (auto &candidate :group.members.candidates ){
+    for (auto &candidate :group->members.candidates ){
         DefsTreeWidgetItem *candItem = new DefsTreeWidgetItem(membItem);
         candItem->setText(0, "CAND Item");
         candItem->setData(0,Qt::UserRole+1, CAND );
-        candItem->setCandidate(candidate);
+        candItem->setCandidate(&candidate);
     }
 }
 
-void CDefInterface::InitializeSelector(StateNode::GroupNode group, DefsTreeWidgetItem *root){
+void CDefInterface::InitializeSelector(StateNode::GroupNode* group, DefsTreeWidgetItem *root){
     DefsTreeWidgetItem *selsItem = new DefsTreeWidgetItem(root);
     selsItem->setText(0, "SELS Item");
     selsItem->setData(0,Qt::UserRole+1, SELS );
-    for (auto &member :group.selectors.members )
+    for (auto &member :group->selectors.members )
     {
         DefsTreeWidgetItem *membItem = new DefsTreeWidgetItem(selsItem);
         membItem->setText(0, "MEMB Item");
         membItem->setData(0,Qt::UserRole+1, MEMB );
-        membItem->setMemberNode(member);
-        for (auto &frame :group.members.frames ){
+        membItem->setMemberNode(&member);
+        for (auto &frame :group->members.frames ){
             DefsTreeWidgetItem *frmsItem = new DefsTreeWidgetItem(membItem);
             frmsItem->setText(0, "FRMS Item");
             frmsItem->setData(0,Qt::UserRole+1, FRMS );
-            frmsItem->setFrame(frame);  }
-        for (auto &candidate :group.members.candidates ){
+            frmsItem->setFrame(&frame);  }
+        for (auto &candidate :group->members.candidates ){
             DefsTreeWidgetItem *candItem = new DefsTreeWidgetItem(membItem);
             candItem->setText(0, "CAND Item");
             candItem->setData(0,Qt::UserRole+1, CAND );
-            candItem->setCandidate(candidate);  }
+            candItem->setCandidate(&candidate);  }
     }
 }
 
-void CDefInterface::InitializeNode(StateNode::Node node, QTreeWidgetItem *root){
-    for (auto &key:node.keyValueProperties )
-        if (ntohl(key.streamKey) == 0xBE83F7FD)
+void CDefInterface::InitializeNode(StateNode::Node* node, QTreeWidgetItem *root){
+    for (auto &key : node->keyValueProperties )
+        if (ntohl(key.streamKey) == 0xBE83F7FD || ntohl(key.streamKey) == 0xDF4B0B8E)
             root->setText(0,key.chars.c_str());
-    for (auto &childNode:node.childNodes )
-        CDefInterface::UI_ConstructStateNode(childNode,root);
+    for (auto &childNode : node->childNodes )
+        CDefInterface::UI_ConstructStateNode(&childNode,root);
 }
 
-void CDefInterface::InitializeSync(StateNode::Node node, QTreeWidgetItem *root){
-    for (auto &syncNode :node.syncNodes ){
+void CDefInterface::InitializeSync(StateNode::Node* node, QTreeWidgetItem *root){
+    for (auto &syncNode :node->syncNodes ){
         DefsTreeWidgetItem *syncItem = new DefsTreeWidgetItem(root);
         syncItem->setText(0, "SYNC Item");
-        syncItem->setSyncNode(syncNode);
+        syncItem->setSyncNode(&syncNode);
         syncItem->setData(0,Qt::UserRole+1, SYNC );    }
 }
 
-void CDefInterface::InitializeDTT(StateNode::Node node, QTreeWidgetItem *root){
-    for (auto &dttNode :node.transNodes ){
+void CDefInterface::InitializeDTT(StateNode::Node* node, QTreeWidgetItem *root){
+    for (auto &dttNode :node->transNodes ){
         DefsTreeWidgetItem *dttItem = new DefsTreeWidgetItem(root);
         dttItem->setText(0, "DTT Item");
-        dttItem->setStateNode(dttNode);
+        dttItem->setStateNode(&dttNode);
         dttItem->setData(0,Qt::UserRole+1, DTT_ );  }
 }
 
-void CDefInterface::InitializeTOVR(StateNode::Node node, QTreeWidgetItem *root){
-    for (auto &ovlyNode :node.ovlyNodes ){
+void CDefInterface::InitializeTOVR(StateNode::Node* node, QTreeWidgetItem *root){
+    for (auto &ovlyNode :node->ovlyNodes ){
         DefsTreeWidgetItem *ovlyItem = new DefsTreeWidgetItem(root);
         ovlyItem->setText(0, "TOVR Item");
-        ovlyItem->setStateNode(ovlyNode);
+        ovlyItem->setStateNode(&ovlyNode);
         ovlyItem->setData(0,Qt::UserRole+1, TOVR );   }
 }
 
 
-void CDefInterface::InitializeEvent(StateNode::Node node, QTreeWidgetItem *root){
-    for ( int i = 0; i < node.events.size(); i++ ){
+void CDefInterface::InitializeEvent(StateNode::Node* node, QTreeWidgetItem *root){
+    for ( int i = 0; i < node->events.size(); i++ ){
         DefsTreeWidgetItem *evntItem = new DefsTreeWidgetItem(root);
         evntItem->setText(0, "Event #" + QString::number(i) );
         evntItem->setData(0,Qt::UserRole+1, EVNT );
-        evntItem->setEventNode(node.events[i]);}
+        evntItem->setEventNode(&node->events[i]);
+        evntItem->setHidden(true);}
 }
 
-void CDefInterface::UI_ConstructGroupNode(StateNode::GroupNode group, QTreeWidgetItem *parent)
+void CDefInterface::UI_ConstructGroupNode(StateNode::GroupNode* group, QTreeWidgetItem *parent)
 {
     DefsTreeWidgetItem *item = new DefsTreeWidgetItem(parent);
-    item->setText(0, "GROUP: " + QString(group.chars.c_str()) );
+    item->setText(0, "GROUP: " + QString(group->chars.c_str()) );
     item->setData(0,Qt::UserRole+1, GRP_ );
     item->setGroupNode(group);
-    InitializeDESC(&group,item);
+    InitializeDESC(group,item);
     InitializeMember(group,item);
     InitializeSelector(group,item);
 }
 
 
-void CDefInterface::UI_ConstructStateNode(StateNode::Node node, QTreeWidgetItem *parent)
+void CDefInterface::UI_ConstructStateNode(StateNode::Node* node, QTreeWidgetItem *parent)
 {
     DefsTreeWidgetItem *item = new DefsTreeWidgetItem(parent);
-    item->setText(0, (node.nodeType == STAT) ? "State Entry" : "Node");
+    item->setText(0, (node->nodeType == STAT) ? "State Entry" : "Node");
     item->setStateNode(node);
-    item->setData(0,Qt::UserRole+1, (node.nodeType == STAT) ? STAT : NODE );
+    item->setData(0,Qt::UserRole+1, (node->nodeType == STAT) ? STAT : NODE );
     InitializeNode(node,item);
     InitializeSync(node,item);
     InitializeDTT(node,item);
     InitializeTOVR(node,item);
-    InitializeDESC(&node,item);
-    InitializeEvent(node,item);;
+    InitializeDESC(node,item);
+    InitializeEvent(node,item);
 }
 
-void CDefInterface::UI_ConstructDefsTree(QTreeWidget* tree, QTableWidget*table, std::vector<StateNode::Definition> defs)
+void CDefInterface::UI_ConstructDefsTree(QTreeWidget* tree, QTableWidget*table, std::vector<StateNode::Definition>* defs)
 {
-    uint32_t totalDefs = defs.size();
+    uint32_t totalDefs = defs->size();
     tree->clear();
     table->clear();
+    tree->setUpdatesEnabled(false);
     for (int i = 0; i < totalDefs; i++)
-       UI_ConstructNewDefinition(tree,defs[i],i);
+       UI_ConstructNewDefinition(tree,&defs->at(i),i);
+    tree->setUpdatesEnabled(true);
 }
 
 
-void CDefInterface::UI_ConstructNewDefinition(QTreeWidget* tree, StateNode::Definition animDef, int defIndex)
+void CDefInterface::UI_ConstructNewDefinition(QTreeWidget* tree, StateNode::Definition* animDef, int defIndex)
 {
     DefsTreeWidgetItem *rootParent = new DefsTreeWidgetItem(tree);
     //Construct State sets
-    for (auto &stateNode:animDef.stateNodes )
-        CDefInterface::UI_ConstructStateNode(stateNode,rootParent);
+    for (auto &stateNode : animDef->stateNodes )
+        CDefInterface::UI_ConstructStateNode(&stateNode,rootParent);
     //Construct Group sets
-    for (auto &groupNode:animDef.groupNodes )
-        CDefInterface::UI_ConstructGroupNode(groupNode,rootParent);
+    for (auto &groupNode : animDef->groupNodes )
+        CDefInterface::UI_ConstructGroupNode(&groupNode,rootParent);
     rootParent->setText(0, "Definition #" + QString::number(defIndex) );
 }
 
@@ -252,7 +258,7 @@ void CDefInterface::UI_Table_BuildSYNC(QTableWidget* table, DefsTreeWidgetItem* 
 }
 
 void CDefInterface::UI_Table_BuildDESC(QTableWidget* table, DefsTreeWidgetItem* item){
-    for ( std::string descriptor : item->getDescriptors() )
+    for ( std::string* descriptor : item->getDescriptors() )
          CDefInterface::AddValueToTable(table, "desc", QVariant::fromValue(descriptor));
 }
 void CDefInterface::UI_Table_BuildFRMS(QTableWidget* table, DefsTreeWidgetItem* item){
@@ -265,7 +271,6 @@ void CDefInterface::UI_Table_BuildNODE(QTableWidget* table, DefsTreeWidgetItem* 
     for ( auto& prop : node->keyValueProperties){
         QString key = FormatKeyValueString(prop);
         CDefInterface::AddValueToTable(table, key, GetItemVariant(&prop) ); }
-
     if (node->streamType == 0x2){
         AddValueToTable(table,"int value",QVariant::fromValue(&node->value_0));
         AddValueToTable(table,"long value",QVariant::fromValue(&node->value_1));
@@ -277,7 +282,9 @@ void CDefInterface::UI_Table_BuildNODE(QTableWidget* table, DefsTreeWidgetItem* 
 }
 
 void CDefInterface::UI_Table_BuildKeyValue(QTableWidget* table, DefsTreeWidgetItem* item){
-    for ( auto& prop : item->getStateNode()->keyValueProperties){
+    StateNode::Node* node = item->getStateNode();
+    if (!node){ return;}
+    for ( auto& prop : node->keyValueProperties){
         QString key = FormatKeyValueString(prop);
         CDefInterface::AddValueToTable(table, key, GetItemVariant(&prop) ); }
 }

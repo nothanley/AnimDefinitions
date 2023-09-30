@@ -13,6 +13,10 @@ class C_StateNode
 private:
 	std::istream* fs;
 
+    void CollectStateNodes(StateNode::Definition* animDef);
+
+    void CollectGroupNodes(StateNode::Definition* animDef);
+
 	std::vector<KeyValueProp> ReadKeyValueProperty(bool isNodeValue=true);
 
 	Node ReadNodeType1();

@@ -22,10 +22,18 @@ namespace StateNode {
 		SELS = 0x736C6573
 	};
 
+    struct DefArg {
+        std::string name;
+        uint8_t type;
+        uint64_t identifier;
+        uint32_t charSize;
+        uint16_t value;
+    };
+
 	struct KeyValueProp {
 		uint32_t streamKey;
 		std::string chars;
-		uint64_t val64;
+        uint64_t val64 = 0x0;
 		uint32_t val32;
 		uint16_t val16;
 		uint8_t val8;
@@ -50,6 +58,7 @@ namespace StateNode {
         uint64_t value_3;
         std::vector<EventTrigger> triggers;
         std::vector<EventArgument> arguments;
+        std::string chars;
     };
 
 	struct SyncNode {

@@ -11,23 +11,15 @@ using namespace BinaryIO;
 class ADefHandler
 {
 
-	struct DefArg {
-		std::string name;
-		uint8_t type;
-		uint64_t identifier;
-		uint32_t charSize;
-		uint16_t value;
-	};
-
 	std::filebuf* fileBuffer = new std::filebuf();
-	float m_fileVersion;
-	uint32_t m_iProjectType;
 	uint32_t m_iFileSize;
 	std::istream* fs;
 
 public:
     string m_cFilePath;
+    std::vector<char> m_metaStream; // holds all non 'adef' streams
     std::vector<StateNode::Definition> m_Definitions;
+    std::vector<DefArg> m_Arguments;
 
 	enum {
 		TYPE = 0x65707974,
@@ -44,6 +36,7 @@ public:
 		ADEF = 0x61646566
 	};
 
+    ADefHandler(int type=TYPE){}
 	ADefHandler(const char* filePath) {
 		openFile(filePath);
 	}
@@ -78,8 +71,6 @@ private:
 
 	void LoadArguments(int size) {
 		/* Reads all binary arguments. Stores in argument array */
-		std::vector<DefArg> args;
-
 		for (int i = 0; i < size; i++) {
 			DefArg arguement;
 			arguement.identifier = ReadUInt64(*fs);
@@ -105,7 +96,7 @@ private:
 				default:
 					break;
 			}
-			args.push_back(arguement);
+            m_Arguments.push_back(arguement);
 		}
 
 	}
@@ -115,6 +106,7 @@ private:
 		std::vector<uint64_t> cmds;
 
 		for (int i = 0; i < size; i++) {
+
 			uint64_t value = ReadUInt64(*fs);
 			cmds.push_back(value);
 		}
@@ -163,14 +155,23 @@ private:
 		}
 	}
 
-	void LoadAnimDef(int size) {
+    std::vector<char> CacheBinaryData( std::istream* fs , uint64_t filePos ){
+        std::vector<char> binaryData; // Init vector
+        fs->seekg(0);
+        uint64_t bytesToRead = filePos;
+        binaryData.resize(bytesToRead); // Read Binary
+        fs->read(binaryData.data(), bytesToRead);
+        fs->seekg(filePos); // Return place
+        return binaryData;
+    }
 
+	void LoadAnimDef(int size) {
+        uint64_t filePos = fs->tellg();
+        this->m_metaStream = CacheBinaryData( fs, filePos-0x8 );
+        fs->seekg(filePos);
 		for (int i = 0; i < size; i++) {
 			C_StateNode newStateNode(fs);
-            newStateNode.InitializeDefinitions(this->m_Definitions);
-		}
-
-		std::cout << "\n function end";
+            newStateNode.InitializeDefinitions(this->m_Definitions); }
 	}
 
 	/* Interprets all binary streams within animdef */
