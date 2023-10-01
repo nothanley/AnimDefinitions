@@ -11,11 +11,12 @@ CONFIG += c++11
 SOURCES += \
     AnimDefinitions/C_DefinitionEncoder.cpp \
     AnimDefinitions/C_StateNode.cpp \
-    Hash/hash.cpp \
+    Encoder/hash.cpp \
     Interface/C_DefInterface.cpp \
     Interface/C_TableBehavior.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    nodedialog.cpp
 
 HEADERS += \
     AnimDefinitions/AnimDefHandler.h \
@@ -27,6 +28,9 @@ HEADERS += \
     ColorItemDelegate.h \
     DefsTableUtils.h \
     DefsTreeWidgetItem.h \
+    Encoder/JsonHandler.h \
+    Encoder/dtmpserializer.h \
+    Encoder/hash.h \
     Hash/hash.h \
     Interface/C_DefInterface.h \
     Interface/C_SyncedTableWidgetItem.h \
@@ -36,10 +40,17 @@ HEADERS += \
     Interface/LabelTreeItemDelegate.h \
     Interface/TypeHandler.h \
     LabelTreeItemDelegate.h \
-    mainwindow.h
+    Widget/C_SyncedTableWidgetItem.h \
+    Widget/ColorItemDelegate.h \
+    Widget/DefsTableUtils.h \
+    Widget/DefsTreeWidgetItem.h \
+    Widget/LabelTreeItemDelegate.h \
+    mainwindow.h \
+    nodedialog.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    nodedialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

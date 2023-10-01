@@ -12,6 +12,7 @@ public:
     static void WriteNodeKey_State(ofstream* stream, StateNode::KeyValueProp property, bool isNodeValue=false);
     static void WriteNodeStream(ofstream* stream, Node node);
     static void WriteCandidateStream(ofstream* stream, StateNode::MemberNode member);
+    static void EncodeDefinition(ofstream* stream,StateNode::Definition definition);
 private:
     void EncodeAllDefinitions();
     std::ofstream* fs;

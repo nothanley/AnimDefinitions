@@ -1,6 +1,5 @@
 #include "C_DefInterface.h"
-#include "DefsTableUtils.h"
-#include "Hash/hash.h"
+#include "Widget/DefsTableUtils.h"
 #include <QPushButton>
 #pragma once
 
@@ -247,6 +246,7 @@ void CDefInterface::UI_ConstructNewDefinition(QTreeWidget* tree, StateNode::Defi
     //Construct Group sets
     for (auto &groupNode : animDef->groupNodes )
         CDefInterface::UI_ConstructGroupNode(&groupNode,rootParent);
+    rootParent->setDefinition(animDef);
     rootParent->setText(0, "Definition #" + QString::number(defIndex) );
 }
 

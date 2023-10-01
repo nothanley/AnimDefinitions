@@ -2,17 +2,25 @@
 #include "ui_mainwindow.h"
 #include "Interface/C_DefInterface.h"
 #include "Interface/C_TableBehavior.h"
-#include "AnimDefinitions/C_DefinitionEncoder.h"
-#include <QMessageBox>
+#include "Encoder/dtmpserializer.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->TreeWidget_Defs->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 MainWindow::~MainWindow(){ delete ui; }
+
+void MainWindow::on_TreeWidget_Defs_customContextMenuRequested(const QPoint &pos){
+    QMenu menu(this);
+    menu.setStyleSheet("QMenu::item:selected {background-color: rgb(81, 121, 194); color: rgb(225, 225, 225); }" );
+    menu.addAction(ui->actionSave_Animation_Entry);
+    menu.addAction(ui->actionAdd_Entry);
+    menu.exec( ui->TreeWidget_Defs->mapToGlobal(pos) );
+}
 
 void ClearAndResetTable(QTableWidget* tableWidget){
     tableWidget->clearContents();
@@ -186,6 +194,61 @@ void MainWindow::on_TreeWidget_Defs_currentItemChanged(QTreeWidgetItem *current,
         ui->TreeWidget_Defs->scrollToItem(currentItemParent); }
 }
 
+void CreateTemplateInputWindow(QWidget* parent, QString* menuInput, bool* ok){
+    *menuInput = QInputDialog::getText(parent,("New Material Template"), ("Enter Template Name:"), QLineEdit::Normal,"", ok);
+}
+
+void MainWindow::AddTemplateDialogPress(Definition definition){
+    if (!this->m_AnimDefinitions){
+        QMessageBox::warning(this,"Warning", "Please load .adefs file to add nodes.");
+        return;}
+    this->m_AnimDefinitions->push_back(definition);
+    int index = m_AnimDefinitions->size();
+    CDefInterface::UI_ConstructNewDefinition(ui->TreeWidget_Defs,&m_AnimDefinitions->back(),index);
+    qDebug() << "Add complete.";
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    NodeDialog* templateDialog = new NodeDialog();
+    connect(templateDialog, &NodeDialog::AddTemplateClicked, this, &MainWindow::AddTemplateDialogPress);
+    templateDialog->setVisible(true);
+}
+
+bool isValidTreeItem(QTreeWidgetItem* item){
+    item = GetItemParent(item);
+    if (!item || item == NULL){ return false;}
+    DefsTreeWidgetItem *selectedItem = dynamic_cast<DefsTreeWidgetItem*>(item);
+    if (!selectedItem){return false;}
+    return selectedItem->text(0).contains("Definition #");
+}
+
+void SaveTreeStateToDTMP(QTreeWidgetItem* item, QString templateName){
+    item = GetItemParent(item);
+    DefsTreeWidgetItem *selectedItem = dynamic_cast<DefsTreeWidgetItem*>(item);
+    if (selectedItem->getDefinition() == nullptr){ qDebug() << "No Def found."; return;}
+
+    DtmpSerializer file("anim_templates.dtmp");
+    file.AppendDefinition(selectedItem->getDefinition(),templateName.toStdString().c_str());
+    file.WriteContents();
+}
+
+void MainWindow::on_actionSave_Animation_Entry_triggered(){
+    QTreeWidgetItem* item = ui->TreeWidget_Defs->selectedItems().first();
+    if (!isValidTreeItem(item)){return;}
+    QString templateName = ""; bool ok;
+    CreateTemplateInputWindow(this,&templateName,&ok);
+    if (!ok || templateName.isEmpty()) { return;};
+    SaveTreeStateToDTMP(item,templateName);
+}
+
+
+void MainWindow::on_actionAdd_Entry_triggered()
+{
+    on_pushButton_clicked();
+}
+
+
 
 
 void MainWindow::on_TableWidget_Defs_cellDoubleClicked(int row, int column)
@@ -278,8 +341,18 @@ void MainWindow::on_TreeWidget_Defs_itemClicked(QTreeWidgetItem *item, int colum
     updateTable = true;
 }
 
-void MainWindow::on_pushButton_clicked()
-{
 
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
 

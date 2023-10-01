@@ -5,6 +5,7 @@
 #include <QTreeWidgetItem>
 #include "ColorItemDelegate.h"
 #include "AnimDefinitions/AnimDefHandler.h"
+#include <QMessageBox>
 #pragma once
 
 class DefsTreeWidgetItem : public QTreeWidgetItem
@@ -38,8 +39,11 @@ public:
     void setCandidate(StateNode::Candidate* node) { m_Candidate = node; }
     StateNode::Candidate* getCandidate(){return this->m_Candidate;}
 
+    void setDefinition(StateNode::Definition* node) { m_Definition = node; }
+    StateNode::Definition* getDefinition(){return this->m_Definition;}
 
 private:
+    StateNode::Definition* m_Definition = nullptr;
     StateNode::Node* m_DefsNode = nullptr;
     StateNode::SyncNode* m_SyncNode = nullptr;
     StateNode::GroupNode* m_GroupNode = nullptr;

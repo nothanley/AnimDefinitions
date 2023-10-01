@@ -186,7 +186,7 @@ void EncodeGroupNode(ofstream* stream,StateNode::GroupNode group){
     EncodeSelectors(stream,group.selectors);
 }
 
-void EncodeDefinition(ofstream* stream,StateNode::Definition definition){
+void CDefinitionEncoder::EncodeDefinition(ofstream* stream,StateNode::Definition definition){
     EncodeStreamMagic(stream,"stat", definition.stateNodes.size());
     for (auto const& state : definition.stateNodes){
         EncodeStateNode(stream,state);  }
@@ -200,8 +200,6 @@ void CDefinitionEncoder::EncodeAllDefinitions(){
     /* Iterate through all defs and encode */
     for (int i = 0; i < m_Definitions->size(); i++){
         EncodeDefinition(fs,m_Definitions->at(i));  }
-//     for (auto const& definition : *m_Definitions){
-//        EncodeDefinition(fs,definition);  }
 }
 
 

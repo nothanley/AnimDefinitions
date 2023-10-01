@@ -1,6 +1,5 @@
 /* Parser for project binaries */
 #pragma once
-
 #include <iostream>
 #include "BinaryIO.h"
 #include <vector>
@@ -93,7 +92,7 @@ private:
 	void ReadCharacterNode(XMLNode& node) {
 		node.charSize = ReadByte(*fs);
 		node.numProperties++;
-		node.name = ReadString(*fs, node.charSize + 1);
+        node.name = ReadString(*fs, node.charSize + 1);
 	}
 
 	void ReadPropertyNode(XMLNode& node, std::vector<XMLProperty>& properties) {
@@ -106,7 +105,7 @@ private:
 		node.charSize = ReadByte(*fs);
 		node.numChildren = ReadUShort(*fs);
 		node.numProperties = ReadByte(*fs);
-		node.name = ReadString(*fs, node.charSize + 1);
+        node.name = ReadString(*fs, node.charSize + 1);
 	}
 
 

@@ -4,6 +4,7 @@
 #include <istream>
 #include <vector>
 #include <string>
+#include <QDebug>
 
 using namespace std;
 
@@ -16,9 +17,8 @@ namespace BinaryIO {
 
 		// Remove any trailing null characters
 		size_t nullPos = value.find('\0');
-		if (nullPos != std::string::npos) {
+        if (nullPos != std::string::npos)
 			value.resize(nullPos);
-		}
 
 		return value;
 	}
@@ -72,10 +72,8 @@ namespace BinaryIO {
 	}
 
 	static uint64_t ReadUInt64(istream& in) {
-
 		uint64_t value = 0;
-		in.read((char*)&value, 8);
-
+        in.read((char*)&value, sizeof(uint64_t));
 		return value;
 	}
 
@@ -137,6 +135,9 @@ namespace BinaryIO {
     }
     static void WriteFloat(ofstream* fs, float value) {
         fs->write(reinterpret_cast<char*>(&value), sizeof(float));
+    }
+    static void WriteString(ofstream* fs, std::string string){
+        fs->write(string.c_str(),string.size()+1);
     }
     static void WriteChars(ofstream* fs, std::string value) {
         WriteUInt32(fs,value.size()+1);

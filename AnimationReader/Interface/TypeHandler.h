@@ -6,7 +6,7 @@
 #include <functional>
 #include <unordered_map>
 #include <QDebug>
-#include "Interface/C_SyncedTableWidgetItem.h"
+#include "Widget/C_SyncedTableWidgetItem.h"
 #pragma once
 
 // Define custom metatype IDs
