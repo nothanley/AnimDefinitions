@@ -1,6 +1,6 @@
 #ifndef DTMPSERIALIZER_H
 #define DTMPSERIALIZER_H
-#include "AnimDefinitions/C_DefinitionEncoder.h"
+#include "C_DefinitionEncoder.h"
 #include <sstream>
 #pragma comment(lib, "Ws2_32.lib")
 #pragma once

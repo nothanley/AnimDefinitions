@@ -1,6 +1,6 @@
 #ifndef C_DEFINITIONENCODER_H
 #define C_DEFINITIONENCODER_H
-#include "AnimDefHandler.h"
+#include "AnimDefinitions/AnimDefHandler.h"
 
 class CDefinitionEncoder
 {

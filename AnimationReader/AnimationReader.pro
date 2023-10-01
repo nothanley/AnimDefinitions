@@ -9,8 +9,8 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    AnimDefinitions/C_DefinitionEncoder.cpp \
     AnimDefinitions/C_StateNode.cpp \
+    Encoder/C_DefinitionEncoder.cpp \
     Encoder/hash.cpp \
     Interface/C_DefInterface.cpp \
     Interface/C_TableBehavior.cpp \
@@ -28,6 +28,7 @@ HEADERS += \
     ColorItemDelegate.h \
     DefsTableUtils.h \
     DefsTreeWidgetItem.h \
+    Encoder/C_DefinitionEncoder.h \
     Encoder/JsonHandler.h \
     Encoder/dtmpserializer.h \
     Encoder/hash.h \

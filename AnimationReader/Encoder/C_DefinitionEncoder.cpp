@@ -1,4 +1,4 @@
-#include "C_DefinitionEncoder.h"
+#include "Encoder/C_DefinitionEncoder.h"
 #include <QDebug>
 using namespace std;
 
