@@ -1,8 +1,8 @@
 #ifndef C_TABLEBEHAVIOR_H
 #define C_TABLEBEHAVIOR_H
-#include "DefsTreeWidgetItem.h"
+#include "Widget/DefsTreeWidgetItem.h"
 #include <QTableWidget>
-#include "Interface/C_SyncedTableWidgetItem.h"
+#include "Widget/C_SyncedTableWidgetItem.h"
 
 class CTableBehavior
 {

@@ -1,42 +1,39 @@
 #include "C_StateNode.h"
 
-
-void C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDefCollection)
-{
-	// Initializes a Definition obj containing State & Group Nodes
-	StateNode::Definition animDef;
-
-	/* Iterate through all State Nodes. Assess stream format*/
-	uint32_t STATMagic = ReadUInt32(*fs);
-	uint32_t numStates = ReadUInt32(*fs);
-
-	for (int i = 0; i < numStates; i++) {
-		Node stateNode{ STAT };
-        stateNode.keyValueProperties = ReadKeyValueProperty(false);
-		stateNode.syncNodes = ProcessSyncNode();
-		stateNode.transNodes.push_back(ProcessTransNode() );
-		stateNode.ovlyNodes.push_back(ProcessTransNode() );
-		stateNode.childNodes.push_back( ProcessNode() );
-		stateNode.descriptors = ProcessDescriptor();
-        stateNode.events = ProcessSMEvents(); // todo: collect this
-		animDef.stateNodes.push_back(stateNode);
-	}
-
-	/* Iterate through all Group Nodes. Assess stream formats*/
-	uint32_t GRPMagic = ReadUInt32(*fs);
-	uint32_t numGroups = ReadUInt32(*fs);
-
-	for (int i = 0; i < numGroups; i++) {
-		GroupNode group;
-		group.chars = ReadString(*fs, ReadUInt32(*fs));
-		group.descriptors = ProcessDescriptor();
-		group.members = ProcessMembers();
-		group.selectors = ProcessSelectors();
-		animDef.groupNodes.push_back(group);
-	}
-
-	aDefCollection.push_back(animDef);
+void C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDefCollection){    // Initializes a Definition obj containing State & Group Nodes
+    StateNode::Definition animDef;
+    CollectStateNodes(&animDef);    /* Iterate through all State Nodes.*/
+    CollectGroupNodes(&animDef);   /* Iterate through all Group Nodes.*/
+    aDefCollection.push_back(animDef);
 }
+
+void C_StateNode::CollectGroupNodes(StateNode::Definition *animDef){
+    uint32_t GRPMagic = ReadUInt32(*fs);
+    uint32_t numGroups = ReadUInt32(*fs);
+    for (int i = 0; i < numGroups; i++) {
+        GroupNode group;
+        group.chars = ReadString(*fs, ReadUInt32(*fs));
+        group.descriptors = ProcessDescriptor();
+        group.members = ProcessMembers();
+        group.selectors = ProcessSelectors();
+        animDef->groupNodes.push_back(group);}
+}
+
+void C_StateNode::CollectStateNodes(StateNode::Definition* animDef){
+    uint32_t STATMagic = ReadUInt32(*fs);
+    uint32_t numStates = ReadUInt32(*fs);
+    for (int i = 0; i < numStates; i++){
+        Node stateNode{ STAT };
+        stateNode.keyValueProperties = ReadKeyValueProperty(false);
+        stateNode.syncNodes = ProcessSyncNode(&stateNode);
+        stateNode.transNodes = ProcessTransNode();
+        stateNode.ovlyNodes = ProcessTransNode();
+        stateNode.childNodes.push_back( ProcessNode() );
+        stateNode.descriptors = ProcessDescriptor();
+        stateNode.events = ProcessSMEvents();
+        animDef->stateNodes.push_back(stateNode);}
+}
+
 
 void C_StateNode::ProcessBargNode(Node *parentNode){
     //Process 'BARG' stream
@@ -47,12 +44,34 @@ void C_StateNode::ProcessBargNode(Node *parentNode){
         float unkFloat = ReadFloat(*fs);
         Node childNode = ProcessNode(true);
         childNode.isBargNode = true;
-        childNode.value_1 = unkVal64;
-        childNode.floatVal = unkFloat;
+        childNode.barg_longlong = unkVal64;
+        childNode.barg_float = unkFloat;
         parentNode->childNodes.push_back( childNode );
     }
 }
 
+Node C_StateNode::ProcessNode(bool isChild)
+{
+    Node parentNode{ NODE };
+    if (!isChild) { uint32_t streamSig = ReadUInt32(*fs); }
+    uint32_t nodeType = ReadUInt32(*fs);
+
+    switch (nodeType) {
+    case(0x2):
+        parentNode = ReadNodeType2();
+        parentNode.streamType = 0x2;
+        break;
+    case(0x1):
+        parentNode = ReadNodeType1();
+        parentNode.streamType = 0x1;
+        break;
+    default:
+        std::cout << fs->tellg();
+        std::cout << "\nInvalid stream type.";
+        break;  }
+
+    return parentNode;
+}
 Node C_StateNode::ReadNodeType1()
 {
 	Node animNode{ NODE };
@@ -72,22 +91,22 @@ Node C_StateNode::ReadNodeType2()
 	return animNode;
 }
 
-Node C_StateNode::ProcessTransNode()
+std::vector<Node> C_StateNode::ProcessTransNode()
 {
-	Node animNode;
+    std::vector<Node> animNodes;
 	uint32_t streamSig = ReadUInt32(*fs);
 	uint32_t numNodes = ReadUInt32(*fs);
-	animNode.nodeType = ( ntohl(streamSig) == DTT_ ? DTT_ : TOVR);
 
-	for (int i = 0; i < numNodes; i++) {
+    for (int i = 0; i < numNodes; i++) {
+        Node animNode;
+        animNode.nodeType = ( ntohl(streamSig) == DTT_ ? DTT_ : TOVR);
         animNode.keyValueProperties= ReadKeyValueProperty();
-	}
-
-	return animNode;
+        animNodes.push_back(animNode);}
+    return animNodes;
 }
 
 
-std::vector<SyncNode> C_StateNode::ProcessSyncNode()
+std::vector<SyncNode> C_StateNode::ProcessSyncNode(StateNode::Node* node)
 {
 	uint32_t streamSig = ReadUInt32(*fs);
 	std::vector<SyncNode> syncNodes;
@@ -101,7 +120,7 @@ std::vector<SyncNode> C_StateNode::ProcessSyncNode()
         syncNodes.push_back(sNode);
 	}
 
-	ReadUInt64(*fs); // 0x0 constant
+    node->syncGlobal = ReadUInt64(*fs);
 	return syncNodes;
 }
 
@@ -257,29 +276,6 @@ SelectorNode C_StateNode::ProcessSelectors()
 		newSelector.members.push_back(member);
 	}
 	return newSelector;
-}
-
-Node C_StateNode::ProcessNode(bool isChild)
-{
-	Node parentNode{ NODE };
-	if (!isChild) { uint32_t streamSig = ReadUInt32(*fs); }
-	uint32_t nodeType = ReadUInt32(*fs);
-
-	switch (nodeType) {
-	case(0x2):
-        parentNode.streamType = 0x2;
-        parentNode = ReadNodeType2();
-		break;
-	case(0x1):
-        parentNode.streamType = 0x1;
-        parentNode = ReadNodeType1();
-		break;
-	default:
-		std::cout << fs->tellg();
-		std::cout << "\nInvalid stream type.";
-        break;  }
-
-	return parentNode;
 }
 
 std::vector<KeyValueProp> C_StateNode::ReadKeyValueProperty(bool isNodeValue)

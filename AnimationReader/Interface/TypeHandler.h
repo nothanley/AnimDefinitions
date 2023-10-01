@@ -6,7 +6,7 @@
 #include <functional>
 #include <unordered_map>
 #include <QDebug>
-#include "Interface/C_SyncedTableWidgetItem.h"
+#include "Widget/C_SyncedTableWidgetItem.h"
 #pragma once
 
 // Define custom metatype IDs
@@ -71,33 +71,22 @@ static void HandleStdString(QVariant& value, SyncedTableWidgetItem* tableItem) {
 
 
 static bool HandleValue(QVariant& value, SyncedTableWidgetItem* tableItem) {
-    int UInt64PtrType = QMetaType::type("uint64_t*");
-    int UInt32PtrType = QMetaType::type("uint32_t*");
-    int UInt16PtrType = QMetaType::type("uint16_t*");
-    int Int32PtrType = QMetaType::type("int32_t*");
-    int QStringPtrType = QMetaType::type("QString*");
-    int BoolPtrType = QMetaType::type("bool*");
-    int FloatPtrType = QMetaType::type("float*");
-    int StdStrPtrType = QMetaType::type("std::string *");
-    int StdStrType = QMetaType::type("std::string");
-
     // Function map to associate metatype IDs with handling functions
     std::unordered_map<int, std::function<void(QVariant&,SyncedTableWidgetItem*)>> handlerMap = {
-        { UInt64PtrType, TypeHandler::HandleUInt64Ptr },
-        { UInt32PtrType, TypeHandler::HandleUInt32Ptr },
-        { UInt16PtrType, TypeHandler::HandleUInt16Ptr },
-        { Int32PtrType, TypeHandler::HandleInt32Ptr },
-        { QStringPtrType, TypeHandler::HandleQStringPtr },
-        { BoolPtrType, TypeHandler::HandleBoolPtr },
-        { FloatPtrType, TypeHandler::HandleFloatPtr },
-        { StdStrPtrType, TypeHandler::HandleConstString },
-        { StdStrType, TypeHandler::HandleStdString }
+        { QMetaType::type("uint64_t*"), TypeHandler::HandleUInt64Ptr },
+        { QMetaType::type("uint32_t*"), TypeHandler::HandleUInt32Ptr },
+        { QMetaType::type("uint16_t*"), TypeHandler::HandleUInt16Ptr },
+        { QMetaType::type("int32_t*"), TypeHandler::HandleInt32Ptr },
+        { QMetaType::type("QString*"), TypeHandler::HandleQStringPtr },
+        { QMetaType::type("bool*"), TypeHandler::HandleBoolPtr },
+        { QMetaType::type("float*"), TypeHandler::HandleFloatPtr },
+        { QMetaType::type("std::string *"), TypeHandler::HandleConstString },
+        { QMetaType::type("std::string"), TypeHandler::HandleStdString }
     };
     auto it = handlerMap.find(value.userType());
     if (it != handlerMap.end()) {
-        it->second(value,tableItem);
-    }else { return false;  }
-
+        it->second(value,tableItem); }
+    else { return false;  }
     return true;
 }
 

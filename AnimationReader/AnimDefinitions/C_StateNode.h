@@ -13,6 +13,10 @@ class C_StateNode
 private:
 	std::istream* fs;
 
+    void CollectStateNodes(StateNode::Definition* animDef);
+
+    void CollectGroupNodes(StateNode::Definition* animDef);
+
 	std::vector<KeyValueProp> ReadKeyValueProperty(bool isNodeValue=true);
 
 	Node ReadNodeType1();
@@ -21,11 +25,11 @@ private:
 
 	Node ProcessNode(bool isChild=false);
 
-	Node ProcessTransNode();
+    std::vector<Node> ProcessTransNode();
 
     void ProcessBargNode(Node *parentNode);
 
-    std::vector<SyncNode> ProcessSyncNode();
+    std::vector<SyncNode> ProcessSyncNode(StateNode::Node* node);
 
     std::vector<std::string> ProcessDescriptor();
 
@@ -42,6 +46,8 @@ private:
 	MemberNode ProcessMembers();
 
 	SelectorNode ProcessSelectors();
+
+    void getSyncNodes(StateNode::Node* state);
 
 public:
 
