@@ -7,5 +7,7 @@
         <file>graphics/vline.png</file>
         <file>graphics/node-icon.png</file>
         <file>graphics/icon-stack.png</file>
+        <file>graphics/t-pose-man.png</file>
+        <file>graphics/editor-icon.ico</file>
     </qresource>
 </RCC>

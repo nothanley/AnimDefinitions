@@ -4,7 +4,6 @@
 #include <istream>
 #include <vector>
 #include <string>
-#include <QDebug>
 
 using namespace std;
 

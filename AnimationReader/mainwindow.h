@@ -23,6 +23,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     QString m_ExplorerPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation); // Cache Explorer Directory
+    void OpenFile(QString path);
 
 private slots:
     void on_actionOpen_File_triggered();
@@ -49,6 +50,8 @@ private slots:
     void on_actionAdd_Entry_triggered();
     void AddTemplateDialogPress( StateNode::Definition definition);
 
+    void on_actionSaveToCurrentFile_triggered();
+
 private:
     Ui::MainWindow *ui;
     ADefHandler* animFile;
@@ -56,7 +59,14 @@ private:
     std::vector<char>* m_binaryStream;
     QString m_DefsFilePath = "";
     bool updateTable = false;
+    bool isDefLoaded(){
+        if (this->m_AnimDefinitions == nullptr){ return false;}
+        if (this->m_AnimDefinitions->size() == 0){ return false;}
+        return true; }
 
+protected:
+void dropEvent(QDropEvent *event) override;
+void dragEnterEvent(QDragEnterEvent *event) override;
 
 };
 

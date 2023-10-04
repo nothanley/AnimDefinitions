@@ -16,8 +16,15 @@
     <pointsize>9</pointsize>
    </font>
   </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>ADefs Editor</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="Resources.qrc">
+    <normaloff>:/graphics/editor-icon.ico</normaloff>:/graphics/editor-icon.ico</iconset>
   </property>
   <property name="layoutDirection">
    <enum>Qt::LeftToRight</enum>
@@ -1457,6 +1464,7 @@ QMenu::item:selected{
      <string>File</string>
     </property>
     <addaction name="actionOpen_File"/>
+    <addaction name="actionSaveToCurrentFile"/>
     <addaction name="actionSave_Definitions"/>
     <addaction name="actionExpand_Collapse"/>
     <addaction name="actionExit"/>
@@ -1545,7 +1553,7 @@ border-color: rgb(50, 69, 103);</string>
     <string>Save as</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+S</string>
+    <string>Ctrl+Shift+S</string>
    </property>
   </action>
   <action name="actionExit">
@@ -1574,6 +1582,14 @@ border-color: rgb(50, 69, 103);</string>
   <action name="actionAdd_Entry">
    <property name="text">
     <string>Add Entry</string>
+   </property>
+  </action>
+  <action name="actionSaveToCurrentFile">
+   <property name="text">
+    <string>Save File</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
  </widget>

@@ -1,5 +1,8 @@
 /* Initializes a C++ object utilizing animation ProjectBin files */
 #include "C_StateNode.h"
+#include "Compression/2k_defs.h"
+#include <QDebug>
+#include <sstream>
 #pragma comment(lib, "Ws2_32.lib")
 #pragma once
 
@@ -12,16 +15,19 @@ class ADefHandler
 {
 
 	std::filebuf* fileBuffer = new std::filebuf();
-	uint32_t m_iFileSize;
+    uint32_t m_iFileSize;
 	std::istream* fs;
+    std::stringstream* zlibBuffer = nullptr;
 
 public:
     string m_cFilePath;
     std::vector<char> m_metaStream; // holds all non 'adef' streams
     std::vector<StateNode::Definition> m_Definitions;
     std::vector<DefArg> m_Arguments;
+    bool isValidFile = false;
 
 	enum {
+        VER_ = 0x5F726576,
 		TYPE = 0x65707974,
 		PROJ = 0x70726f6a,
 		ARGS = 0x61726773,
@@ -42,29 +48,31 @@ public:
 	}
 
 	void openFile(const char* FilePath) {
-
 		// verifies if file is readable
-		ifstream inFile(FilePath);
+        m_cFilePath = FilePath;
+        ifstream inFile(m_cFilePath);
 
 		if (inFile.good())
-			fileBuffer->open(FilePath, ios::in | ios::binary);
+            fileBuffer->open(m_cFilePath, ios::in | ios::binary);
 		else
 			throw("Cannot Open File.");
 
-		// store size
-		this->m_iFileSize = getFileSize(inFile);
-
-		// store filepath&verify type/version
-		m_cFilePath = FilePath;
-		fs = new std::istream(fileBuffer);
-		ValidateADEFs();
+        // store filepath&verify type/version
+        this->m_iFileSize = getFileSize(inFile);
+        fs = new std::istream(fileBuffer);
+        ValidateADEFs();
+        if (!isValidFile){ return;}
 
 		// reset-seek
-		fileBuffer->pubseekpos(ios_base::beg);
-
-		// Gather Basic metadata
+        fs->seekg(0);
+        fileBuffer->pubseekpos(ios_base::beg);
 		LoadAnimDefData();
-		fileBuffer->close();
+
+        // clean memory
+        fs->clear();
+        fileBuffer->close();
+        if (zlibBuffer != nullptr){ zlibBuffer->clear(); delete zlibBuffer;}
+        delete fs;
 	}
 
 private:
@@ -213,21 +221,43 @@ private:
 		}
 	}
 
+    void decompressFile(){
+        uint32_t dataSize;
+        std::ifstream cmpStream;
+        std::stringstream buffer;
+        fs->seekg(0);   // Clear all current buffers
+        buffer << fs->rdbuf();
+        buffer.seekg(0);
+
+        cmpStream.set_rdbuf(buffer.rdbuf());    // Decompress ifstream
+        byte* data = ADef::DecompressMemoryStream(&cmpStream, &dataSize);
+        zlibBuffer = new std::stringstream;
+        zlibBuffer->write((char*)data,dataSize);
+
+        //clear remaining streams and set pointers
+        fileBuffer->close(); fs->clear();
+        if (data != nullptr){this->isValidFile=true;}
+        this->m_iFileSize = dataSize;
+        fs->set_rdbuf(zlibBuffer->rdbuf());
+    }
+
 	void ValidateADEFs() {
 		DWORD magicSig;
-
-		//seeks magic and validates
+        //seeks magic and validates
 		fileBuffer->pubseekpos(ios_base::beg);
 		magicSig = ReadUInt32(*fs);
+        magicSig = ntohl(magicSig);
 
 		//validate type and version
-		if (ntohl(magicSig) != TYPE) {
-			throw("File is invalid ANIMs container.");
-		}
+        if (magicSig != TYPE && magicSig != VER_) {
+            std::cout << ("File is invalid ANIMs container.");
+            return; }
 
+        if (magicSig == VER_){decompressFile();} // Decompress ZLIB
+        isValidFile = true;
 	}
 
-	uint32_t getFileSize(std::ifstream& fileStream)
+    uint64_t getFileSize(std::ifstream& fileStream)
 	{
 		std::streampos currentPosition = fileStream.tellg();
 		fileStream.seekg(0, std::ios::end);

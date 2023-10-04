@@ -1,4 +1,4 @@
-#include "Encoder/C_DefinitionEncoder.h"
+#include "C_DefinitionEncoder.h"
 #include <QDebug>
 using namespace std;
 
@@ -9,6 +9,8 @@ void CDefinitionEncoder::WriteToFileWithStream(string filePath, std::vector<char
     fs->write(stream->data(),stream->size());
     EncodeAllDefinitions();
     this->fs->close();
+    qDebug() << "compressing...";
+    ADef file(filePath.c_str());
 }
 
 void CDefinitionEncoder::WriteToFile(string filePath){

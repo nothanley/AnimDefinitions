@@ -3,6 +3,8 @@
 #include "Interface/C_DefInterface.h"
 #include "Interface/C_TableBehavior.h"
 #include "Encoder/dtmpserializer.h"
+#include <QDragEnterEvent>
+#include <QMimeData>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,6 +23,20 @@ void MainWindow::on_TreeWidget_Defs_customContextMenuRequested(const QPoint &pos
     menu.addAction(ui->actionAdd_Entry);
     menu.exec( ui->TreeWidget_Defs->mapToGlobal(pos) );
 }
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    QString name;
+    QList<QUrl> urls;
+    QList<QUrl>::Iterator i;
+    urls = event->mimeData()->urls();
+    for(i = urls.begin(); i != urls.end(); ++i)
+        name = i->toLocalFile();
+    if (name != ""){ OpenFile(name); }
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event){event->acceptProposedAction();}
+
 
 void ClearAndResetTable(QTableWidget* tableWidget){
     tableWidget->clearContents();
@@ -41,18 +57,24 @@ void MainWindow::UpdateFileStatsLabels(){
     ui->topStat_info->setText("#");
 }
 
+void MainWindow::OpenFile(QString path){
+    if (!path.endsWith(".adefs")){return;}
+    this->m_DefsFilePath = path;
+    this->animFile = new ADefHandler( path.toStdString().c_str() );
+    this->m_AnimDefinitions = &animFile->m_Definitions; // Read Definitions file- collects all defs
+    this->m_binaryStream = &animFile->m_metaStream;
+    CDefInterface::UI_ConstructDefsTree(ui->TreeWidget_Defs,ui->TableWidget_Defs,m_AnimDefinitions);
+    UpdateWindowData();
+    UpdateFileStatsLabels();
+}
+
 void MainWindow::on_actionOpen_File_triggered()
 {
     this->m_DefsFilePath = QFileDialog::getOpenFileName(this, tr("Open .adefs file"),
                                                      this->m_ExplorerPath,
                                                      tr("Animation Definitions (*.adefs)") );
     if (m_DefsFilePath == ""){ return; }
-    this->animFile = new ADefHandler( m_DefsFilePath.toStdString().c_str() );
-    this->m_AnimDefinitions = &animFile->m_Definitions; // Read Definitions file- collects all defs
-    this->m_binaryStream = &animFile->m_metaStream;
-    CDefInterface::UI_ConstructDefsTree(ui->TreeWidget_Defs,ui->TableWidget_Defs,m_AnimDefinitions);
-    UpdateWindowData();
-    UpdateFileStatsLabels();
+    OpenFile(m_DefsFilePath);
 }
 
 
@@ -77,15 +99,7 @@ QString getDirectoryPath(QString filePath){
 }
 
 void MainWindow::on_SaveButton_clicked(){
-    if (this->m_AnimDefinitions->size() == 0){
-        QMessageBox::warning(this,"Warning", "Please load a definition to save file."); return;}
-    QString presetPath = (m_DefsFilePath == "") ? this->m_ExplorerPath : getDirectoryPath(this->m_DefsFilePath);
-    std::string saveFilePath = QFileDialog::getSaveFileName(this, tr("Save .adefs file"), presetPath,
-                                        tr("Animation Definitions (*.adefs)") ).toStdString();
-    if (saveFilePath == ""){ return; }
-    CDefinitionEncoder(m_AnimDefinitions).WriteToFileWithStream(saveFilePath,this->m_binaryStream);
-    QMessageBox::warning(this, "Save Complete", "File Saved Successfully to: \""
-                         + QString::fromStdString(saveFilePath) + "\"");
+    on_actionSaveToCurrentFile_triggered();
 }
 
 void MainWindow::on_expandcollapseButton_clicked(bool checked){
@@ -123,7 +137,17 @@ void MainWindow::on_TableWidget_Defs_itemChanged(QTableWidgetItem *item){
 }
 
 
-void MainWindow::on_actionSave_Definitions_triggered(){ on_SaveButton_clicked(); }
+void MainWindow::on_actionSave_Definitions_triggered(){
+    if (!isDefLoaded()){
+        QMessageBox::warning(this,"Warning", "Please load a definition to save file."); return;}
+    QString presetPath = (m_DefsFilePath == "") ? this->m_ExplorerPath : getDirectoryPath(this->m_DefsFilePath);
+    std::string saveFilePath = QFileDialog::getSaveFileName(this, tr("Save .adefs file"), presetPath,
+                                        tr("Animation Definitions (*.adefs)") ).toStdString();
+    if (saveFilePath == ""){ return; }
+    CDefinitionEncoder(m_AnimDefinitions).WriteToFileWithStream(saveFilePath,this->m_binaryStream);
+    QMessageBox::warning(this, "Save Complete", "File Saved Successfully to: \""
+                         + QString::fromStdString(saveFilePath) + "\"");
+}
 
 
 void MainWindow::on_actionExit_triggered(){ QApplication::exit(); }
@@ -210,7 +234,7 @@ void MainWindow::AddTemplateDialogPress(Definition definition){
 
 void MainWindow::on_pushButton_clicked()
 {
-    NodeDialog* templateDialog = new NodeDialog();
+    NodeDialog* templateDialog = new NodeDialog(this);
     connect(templateDialog, &NodeDialog::AddTemplateClicked, this, &MainWindow::AddTemplateDialogPress);
     templateDialog->setVisible(true);
 }
@@ -234,6 +258,12 @@ void SaveTreeStateToDTMP(QTreeWidgetItem* item, QString templateName){
 }
 
 void MainWindow::on_actionSave_Animation_Entry_triggered(){
+    if (!this->m_AnimDefinitions){
+        QMessageBox::warning(this,"Warning", "Please load .adefs file to save def.");
+        return;}
+    if (!ui->TreeWidget_Defs->currentItem()){
+        QMessageBox::warning(this,"Warning", "Please load node to save def.");
+        return;}
     QTreeWidgetItem* item = ui->TreeWidget_Defs->selectedItems().first();
     if (!isValidTreeItem(item)){return;}
     QString templateName = ""; bool ok;
@@ -343,10 +373,31 @@ void MainWindow::on_TreeWidget_Defs_itemClicked(QTreeWidgetItem *item, int colum
 
 
 
+void CreateSaveOverwritePrompt(QString path, bool* ok){
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Overwrite File");
+    msgBox.setText("Are you sure you want to overwrite " + path+ "?");
+    msgBox.setStandardButtons(QMessageBox::Yes);
+    msgBox.addButton(QMessageBox::No);
+    msgBox.setDefaultButton(QMessageBox::No);
+    if(msgBox.exec() == QMessageBox::Yes){*ok = true;}
+    else { *ok = false; }
+}
 
 
-
-
+void MainWindow::on_actionSaveToCurrentFile_triggered()
+{
+    if (m_DefsFilePath == ""){ on_actionSave_Definitions_triggered(); return;}
+    if (!isDefLoaded()){
+        QMessageBox::warning(this,"Warning", "Please load a definition to save file."); return;}
+    QString savePath = m_DefsFilePath;
+    bool isSaveReady = false;
+    CreateSaveOverwritePrompt(savePath,&isSaveReady);
+    if (isSaveReady){
+        CDefinitionEncoder(m_AnimDefinitions).WriteToFileWithStream(savePath.toStdString(),this->m_binaryStream);
+        QMessageBox::warning(this, "Save Complete", "File Saved Successfully to: \""
+                             + savePath + "\""); }
+}
 
 
 

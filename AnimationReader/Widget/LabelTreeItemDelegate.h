@@ -27,10 +27,10 @@ public:
 
         int squareSize = 38; // Adjust this size as needed
         int margin = 14;     // Adjust the margin as needed
-        QRect itemRect = option.rect;
-        QRect squareRect = itemRect.adjusted(margin, margin*1.25, -itemRect.width() + squareSize + margin, -margin*1.25);
+        QRect squareRect = option.rect.adjusted(margin, 4, -option.rect.width()+squareSize+margin, -4);
 
         // Set the painter to draw the red square
+        double cornerRadius = 2; // Adjust the corner radius as needed
         painter->save();
         painter->setPen(Qt::NoPen);
         painter->setBrush(QColor(214, 46, 255));
@@ -91,20 +91,18 @@ public:
                 break;
         }
 
-        int cornerRadius = 1; // Adjust the corner radius as needed
+        // Set the painter to draw the "dummy" text
         painter->drawRoundedRect(squareRect, cornerRadius, cornerRadius);
+        painter->setPen(Qt::white); // You can change the text color as needed
+        QRect labelRect = squareRect.adjusted( 5, -2, 0, 0); // Adjust the padding as needed
+        painter->setFont(QFont("Microsoft YaHei UI",7,61));
+        painter->drawText(labelRect, Qt::AlignVCenter, labelText );
 
         // Set the painter to draw the Item text
         painter->setFont(QFont("Microsoft YaHei UI",8,55));
         painter->setPen( QColor(170, 190, 225) ); // You can change the text color as needed
-        QRect textRect = itemRect.adjusted(squareSize + 1.75 * margin, 0, 0, 0); // Adjust the padding as needed
+        QRect textRect = option.rect.adjusted(squareSize + 1.75 * margin, 0, 0, 0); // Adjust the padding as needed
         painter->drawText(textRect, Qt::AlignVCenter, index.data().toString() );
-
-        // Set the painter to draw the "dummy" text
-        painter->setPen(Qt::white); // You can change the text color as needed
-        QRect labelRect = itemRect.adjusted( squareSize - 20, -2, 0, 0); // Adjust the padding as needed
-        painter->setFont(QFont("Microsoft YaHei UI",7,61));
-        painter->drawText(labelRect, Qt::AlignVCenter, labelText );
 
         // Draw the item's text after the square
         QRect textClipRect = option.rect.adjusted(squareSize + 2 * margin, 0, 0, 0); // Clip the text to avoid overlapping
@@ -114,6 +112,9 @@ public:
 
     void setTreeWidget(QTreeWidget* treePtr){ this->m_TreeWidget = treePtr; }
 
+    void formatPainter(QString* labelText, QPainter* painter){
+
+    }
 private:
     QTreeWidget* m_TreeWidget = nullptr;
 };
