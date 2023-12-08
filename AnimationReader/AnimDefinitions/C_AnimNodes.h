@@ -26,8 +26,9 @@ namespace StateNode {
         std::string name;
         uint8_t type;
         uint64_t identifier;
-        uint32_t charSize;
-        uint16_t value;
+        uint32_t value; // should be short?
+        float fValue;
+        bool flag;
     };
 
 	struct KeyValueProp {
@@ -43,6 +44,7 @@ namespace StateNode {
 
     struct EventArgument {
         uint16_t index;
+        DefArg definition;
     };
 
     struct EventTrigger {
@@ -59,6 +61,7 @@ namespace StateNode {
         std::vector<EventTrigger> triggers;
         std::vector<EventArgument> arguments;
         std::string chars;
+        std::string name;
     };
 
 	struct SyncNode {

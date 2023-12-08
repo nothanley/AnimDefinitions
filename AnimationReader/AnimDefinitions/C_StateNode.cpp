@@ -1,4 +1,5 @@
 #include "C_StateNode.h"
+#include "AnimDefHandler.h"
 
 void C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDefCollection){    // Initializes a Definition obj containing State & Group Nodes
     StateNode::Definition animDef;
@@ -140,12 +141,19 @@ std::vector<std::string> C_StateNode::ProcessDescriptor()
 
 std::vector<EventArgument> C_StateNode::ReadEventArguments()
 {
-    uint32_t streamSig = ReadUInt32(*fs); //  0xARGS
+    uint32_t streamSig = ReadUInt32(*fs);
     uint32_t numArgs = ReadUInt32(*fs);
     std::vector<EventArgument> argCollection;
 
-    for (int i = 0; i < numArgs; i++)
-        argCollection.push_back(EventArgument{ ReadUShort(*fs) });
+    for (int i = 0; i < numArgs; i++){
+        EventArgument argument;
+        argument.index = ReadUShort(*fs);
+
+        if (this->m_pParent != nullptr)
+            argument.definition = m_pParent->m_Arguments[argument.index];
+
+        argCollection.push_back(argument);
+    }
 
     return argCollection;
 }
@@ -163,6 +171,22 @@ std::vector<EventTrigger> C_StateNode::ReadEventTriggers()
     return trigCollection;
 }
 
+int binarySearch(const std::vector<uint64_t>& vec, uint64_t target) {
+    auto it = std::lower_bound(vec.begin(), vec.end(), target);
+    return (it != vec.end() && *it == target) ? std::distance(vec.begin(), it) : -1;
+}
+
+std::string getMatchingString(uint64_t guid, ADefHandler* ratBuffer){
+    if (ratBuffer == nullptr){
+        return "";
+    }
+
+    int index = binarySearch(ratBuffer->m_aEventHashes,guid);
+    if (index == -1) return "";
+
+    return ratBuffer->m_aEventTitles[index];
+}
+
 std::vector<EventNode> C_StateNode::ProcessSMEvents()
 {
     std::vector<EventNode> events;
@@ -178,6 +202,7 @@ std::vector<EventNode> C_StateNode::ProcessSMEvents()
             newEvent.value_3 = ReadUInt64(*fs);
         }
 
+        newEvent.name = getMatchingString(newEvent.value_0,this->m_pParent);
         newEvent.triggers = ReadEventTriggers();
         newEvent.arguments = ReadEventArguments();
         events.push_back(newEvent);

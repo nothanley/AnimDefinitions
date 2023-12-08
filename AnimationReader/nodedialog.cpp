@@ -30,7 +30,7 @@ DefEntry* FindMatchingEntry(std::vector<DefEntry>* templates, std::string name){
 StateNode::Definition ReadDefinitionStream(std::stringstream* stream){
     std::vector<StateNode::Definition> nodeArray;
     stream->seekg(0);
-    C_StateNode state(stream);
+    C_StateNode state(stream, nullptr);
     state.InitializeDefinitions(nodeArray);
     return nodeArray.at(0);
 }

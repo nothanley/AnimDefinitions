@@ -7,6 +7,7 @@
 #pragma once
 using namespace StateNode;
 
+class ADefHandler;
 class C_StateNode
 {
 
@@ -49,12 +50,16 @@ private:
 
     void getSyncNodes(StateNode::Node* state);
 
+    ADefHandler* m_pParent = nullptr;
+
 public:
 
-	C_StateNode(std::istream* binaryStream) {
+    C_StateNode(std::istream* binaryStream, ADefHandler* parent) {
 		this->fs = binaryStream;
+        this->m_pParent = parent;
 	}
 
-	void InitializeDefinitions(std::vector<StateNode::Definition>& nodes);
+    void InitializeDefinitions(std::vector<StateNode::Definition>& nodes);
+
 };
 
