@@ -22,6 +22,7 @@ Q_DECLARE_METATYPE(std::string)
 
 class TypeHandler{
 public:
+
 // Handling functions for different types
 static void HandleUInt64Ptr(QVariant& value, SyncedTableWidgetItem* tableItem) {
     tableItem->setNodeProperty(value);

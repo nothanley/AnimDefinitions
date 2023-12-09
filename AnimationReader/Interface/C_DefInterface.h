@@ -1,6 +1,6 @@
 
 #include <QTableWidget>
-#include "AnimDefinitions/AnimDefHandler.h"
+#include "DefsReader.h"
 #include "Widget/DefsTreeWidgetItem.h"
 #include "TypeHandler.h"
 #pragma once

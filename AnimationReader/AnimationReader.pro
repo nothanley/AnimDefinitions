@@ -8,51 +8,60 @@ CONFIG += c++11
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += $$PWD/Core/include
+INCLUDEPATH += $$PWD/Core/src
+
 SOURCES += \
-    AnimDefinitions/C_DefinitionEncoder.cpp \
-    AnimDefinitions/C_StateNode.cpp \
-    Compression/zlib/adler32.c \
-    Compression/zlib/compress.c \
-    Compression/zlib/crc32.c \
-    Compression/zlib/deflate.c \
-    Compression/zlib/gzclose.c \
-    Compression/zlib/gzlib.c \
-    Compression/zlib/gzread.c \
-    Compression/zlib/gzwrite.c \
-    Compression/zlib/infback.c \
-    Compression/zlib/inffast.c \
-    Compression/zlib/inflate.c \
-    Compression/zlib/inftrees.c \
-    Compression/zlib/trees.c \
-    Compression/zlib/uncompr.c \
-    Compression/zlib/zutil.c \
+    Core/include/compression/zcompress.cpp \
+    Core/include/compression/zlib/adler32.c \
+    Core/include/compression/zlib/compress.c \
+    Core/include/compression/zlib/crc32.c \
+    Core/include/compression/zlib/deflate.c \
+    Core/include/compression/zlib/gzclose.c \
+    Core/include/compression/zlib/gzlib.c \
+    Core/include/compression/zlib/gzread.c \
+    Core/include/compression/zlib/gzwrite.c \
+    Core/include/compression/zlib/infback.c \
+    Core/include/compression/zlib/inffast.c \
+    Core/include/compression/zlib/inflate.c \
+    Core/include/compression/zlib/inftrees.c \
+    Core/include/compression/zlib/trees.c \
+    Core/include/compression/zlib/uncompr.c \
+    Core/include/compression/zlib/zutil.c \
+    Core/src/BinaryIO.cpp \
+    Core/src/Definition.cpp \
+    Core/src/DefsEncoder.cpp \
+    Core/src/DefsReader.cpp \
+    Core/src/StateNode.cpp \
+    Core/src/main.cpp \
+    Encoder/dtmpserializer.cpp \
     Interface/C_DefInterface.cpp \
     Encoder/hash.cpp \
     Interface/C_TableBehavior.cpp \
+    Widget/DefsTableUtils.cpp \
     main.cpp \
     mainwindow.cpp \
     nodedialog.cpp
 
 HEADERS += \
-    AnimDefinitions/AnimDefHandler.h \
-    AnimDefinitions/BinaryIO.h \
-    AnimDefinitions/C_AnimNodes.h \
-    AnimDefinitions/C_DefStream.h \
-    AnimDefinitions/C_DefinitionEncoder.h \
-    AnimDefinitions/C_StateNode.h \
-    ColorItemDelegate.h \
-    Compression/2k_defs.h \
-    Compression/zlib/crc32.h \
-    Compression/zlib/deflate.h \
-    Compression/zlib/gzguts.h \
-    Compression/zlib/inffast.h \
-    Compression/zlib/inffixed.h \
-    Compression/zlib/inflate.h \
-    Compression/zlib/inftrees.h \
-    Compression/zlib/trees.h \
-    Compression/zlib/zconf.h \
-    Compression/zlib/zlib.h \
-    Compression/zlib/zutil.h \
+    Core/include/compression/zcompress.h \
+    Core/include/compression/zlib/crc32.h \
+    Core/include/compression/zlib/deflate.h \
+    Core/include/compression/zlib/gzguts.h \
+    Core/include/compression/zlib/inffast.h \
+    Core/include/compression/zlib/inffixed.h \
+    Core/include/compression/zlib/inflate.h \
+    Core/include/compression/zlib/inftrees.h \
+    Core/include/compression/zlib/trees.h \
+    Core/include/compression/zlib/zconf.h \
+    Core/include/compression/zlib/zlib.h \
+    Core/include/compression/zlib/zutil.h \
+    Core/src/AnimNode.h \
+    Core/src/BinaryIO.h \
+    Core/src/Definition.h \
+    Core/src/DefsEncoder.h \
+    Core/src/DefsReader.h \
+    Core/src/StateNode.h \
     DefsTableUtils.h \
     DefsTreeWidgetItem.h \
     Encoder/JsonHandler.h \

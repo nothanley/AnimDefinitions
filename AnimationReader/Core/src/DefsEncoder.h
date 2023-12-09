@@ -1,6 +1,5 @@
-#ifndef C_DEFINITIONENCODER_H
-#define C_DEFINITIONENCODER_H
-#include "AnimDefHandler.h"
+/* Reserializes a vector of statenodes into ADEF serialized format */
+#include "DefsReader.h"
 
 class CDefinitionEncoder
 {
@@ -13,10 +12,10 @@ public:
     static void WriteNodeStream(ofstream* stream, Node node);
     static void WriteCandidateStream(ofstream* stream, StateNode::MemberNode member);
     static void EncodeDefinition(ofstream* stream,StateNode::Definition definition);
+
 private:
     void EncodeAllDefinitions();
-    std::ofstream* fs;
+    std::ofstream* fs = nullptr;
     std::vector<StateNode::Definition>* m_Definitions = nullptr;
-};
 
-#endif // C_DEFINITIONENCODER_H
+};
