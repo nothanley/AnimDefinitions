@@ -1,13 +1,39 @@
-#include "C_StateNode.h"
+#include <DefsReader.h>
+#include <BinaryIO.h>
+#include <vector>
+#include <iostream>
+#include <winsock.h>
 
-void C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDefCollection){    // Initializes a Definition obj containing State & Group Nodes
+using namespace BinaryIO;
+
+int
+binarySearch(const std::vector<uint64_t>& vec, uint64_t target) {
+    auto it = std::lower_bound(vec.begin(), vec.end(), target);
+    return (it != vec.end() && *it == target) ? std::distance(vec.begin(), it) : -1;
+}
+
+std::string
+getMatchingString(uint64_t guid, ADefHandler* ratBuffer){
+    if (ratBuffer == nullptr){
+        return "";
+    }
+
+    int index = binarySearch(ratBuffer->m_aEventHashes,guid);
+    if (index == -1) return "";
+
+    return ratBuffer->m_aEventTitles[index];
+}
+
+void
+C_StateNode::InitializeDefinitions(std::vector<StateNode::Definition>& aDefCollection){    // Initializes a Definition obj containing State & Group Nodes
     StateNode::Definition animDef;
     CollectStateNodes(&animDef);    /* Iterate through all State Nodes.*/
     CollectGroupNodes(&animDef);   /* Iterate through all Group Nodes.*/
     aDefCollection.push_back(animDef);
 }
 
-void C_StateNode::CollectGroupNodes(StateNode::Definition *animDef){
+void
+C_StateNode::CollectGroupNodes(StateNode::Definition *animDef){
     uint32_t GRPMagic = ReadUInt32(*fs);
     uint32_t numGroups = ReadUInt32(*fs);
     for (int i = 0; i < numGroups; i++) {
@@ -19,7 +45,8 @@ void C_StateNode::CollectGroupNodes(StateNode::Definition *animDef){
         animDef->groupNodes.push_back(group);}
 }
 
-void C_StateNode::CollectStateNodes(StateNode::Definition* animDef){
+void
+C_StateNode::CollectStateNodes(StateNode::Definition* animDef){
     uint32_t STATMagic = ReadUInt32(*fs);
     uint32_t numStates = ReadUInt32(*fs);
     for (int i = 0; i < numStates; i++){
@@ -35,7 +62,8 @@ void C_StateNode::CollectStateNodes(StateNode::Definition* animDef){
 }
 
 
-void C_StateNode::ProcessBargNode(Node *parentNode){
+void
+C_StateNode::ProcessBargNode(Node *parentNode){
     //Process 'BARG' stream
     uint32_t bargSig = ReadUInt32(*fs);
     uint32_t numBargs = ReadUInt32(*fs);
@@ -50,7 +78,8 @@ void C_StateNode::ProcessBargNode(Node *parentNode){
     }
 }
 
-Node C_StateNode::ProcessNode(bool isChild)
+Node
+C_StateNode::ProcessNode(bool isChild)
 {
     Node parentNode{ NODE };
     if (!isChild) { uint32_t streamSig = ReadUInt32(*fs); }
@@ -72,7 +101,8 @@ Node C_StateNode::ProcessNode(bool isChild)
 
     return parentNode;
 }
-Node C_StateNode::ReadNodeType1()
+Node
+C_StateNode::ReadNodeType1()
 {
 	Node animNode{ NODE };
     animNode.flag = ReadBool(*fs);
@@ -80,7 +110,8 @@ Node C_StateNode::ReadNodeType1()
 	return animNode;
 }
 
-Node C_StateNode::ReadNodeType2()
+Node
+C_StateNode::ReadNodeType2()
 {
 	Node animNode{ NODE };
     animNode.value_0 = ReadSInt32(*fs);
@@ -91,7 +122,8 @@ Node C_StateNode::ReadNodeType2()
 	return animNode;
 }
 
-std::vector<Node> C_StateNode::ProcessTransNode()
+std::vector<Node>
+C_StateNode::ProcessTransNode()
 {
     std::vector<Node> animNodes;
 	uint32_t streamSig = ReadUInt32(*fs);
@@ -106,7 +138,8 @@ std::vector<Node> C_StateNode::ProcessTransNode()
 }
 
 
-std::vector<SyncNode> C_StateNode::ProcessSyncNode(StateNode::Node* node)
+std::vector<SyncNode>
+C_StateNode::ProcessSyncNode(StateNode::Node* node)
 {
 	uint32_t streamSig = ReadUInt32(*fs);
 	std::vector<SyncNode> syncNodes;
@@ -124,7 +157,8 @@ std::vector<SyncNode> C_StateNode::ProcessSyncNode(StateNode::Node* node)
 	return syncNodes;
 }
 
-std::vector<std::string> C_StateNode::ProcessDescriptor()
+std::vector<std::string>
+C_StateNode::ProcessDescriptor()
 {
 	std::vector<std::string> descriptors;
 	uint32_t streamSig = ReadUInt32(*fs);
@@ -138,19 +172,27 @@ std::vector<std::string> C_StateNode::ProcessDescriptor()
 }
 
 
-std::vector<EventArgument> C_StateNode::ReadEventArguments()
+std::vector<EventArgument>
+C_StateNode::ReadEventArguments()
 {
-    uint32_t streamSig = ReadUInt32(*fs); //  0xARGS
+    uint32_t streamSig = ReadUInt32(*fs);
     uint32_t numArgs = ReadUInt32(*fs);
     std::vector<EventArgument> argCollection;
 
-    for (int i = 0; i < numArgs; i++)
-        argCollection.push_back(EventArgument{ ReadUShort(*fs) });
+    for (int i = 0; i < numArgs; i++){
+        EventArgument argument;
+        argument.index = ReadUShort(*fs);
+        if (this->m_pParent != nullptr)
+            argument.definition = m_pParent->m_Arguments[argument.index];
+
+        argCollection.push_back(argument);
+    }
 
     return argCollection;
 }
 
-std::vector<EventTrigger> C_StateNode::ReadEventTriggers()
+std::vector<EventTrigger>
+C_StateNode::ReadEventTriggers()
 {
     uint32_t streamSig = ReadUInt32(*fs); // 0xTRIGS
     uint32_t numTriggers = ReadUInt32(*fs);
@@ -163,7 +205,8 @@ std::vector<EventTrigger> C_StateNode::ReadEventTriggers()
     return trigCollection;
 }
 
-std::vector<EventNode> C_StateNode::ProcessSMEvents()
+std::vector<EventNode>
+C_StateNode::ProcessSMEvents()
 {
     std::vector<EventNode> events;
     uint32_t streamSig = ReadUInt32(*fs);
@@ -178,6 +221,7 @@ std::vector<EventNode> C_StateNode::ProcessSMEvents()
             newEvent.value_3 = ReadUInt64(*fs);
         }
 
+        newEvent.name = getMatchingString(newEvent.value_0,this->m_pParent);
         newEvent.triggers = ReadEventTriggers();
         newEvent.arguments = ReadEventArguments();
         events.push_back(newEvent);
@@ -185,7 +229,8 @@ std::vector<EventNode> C_StateNode::ProcessSMEvents()
     return events;
 }
 
-void C_StateNode::ReadFRMSStream(StateNode::MemberNode* member)
+void
+C_StateNode::ReadFRMSStream(StateNode::MemberNode* member)
 {
 	uint32_t streamSig = ReadUInt32(*fs);
 	uint32_t numFrames = ReadUInt32(*fs);
@@ -194,7 +239,8 @@ void C_StateNode::ReadFRMSStream(StateNode::MemberNode* member)
 		member->frames.push_back( StateNode::Frame{ ReadUInt64(*fs) ,  ReadBool(*fs) } );
 }
 
-void C_StateNode::ReadCandStream(StateNode::MemberNode* member)
+void
+C_StateNode::ReadCandStream(StateNode::MemberNode* member)
 {
     uint32_t streamSig = ReadUInt32(*fs);
     uint32_t numCands = ReadUInt32(*fs);
@@ -247,7 +293,8 @@ void C_StateNode::ReadCandStream(StateNode::MemberNode* member)
     }
 }
 
-MemberNode C_StateNode::ProcessMembers()
+MemberNode
+C_StateNode::ProcessMembers()
 {
 	MemberNode member;
 	uint32_t streamSig = ReadUInt32(*fs);
@@ -262,7 +309,8 @@ MemberNode C_StateNode::ProcessMembers()
 	return member;
 }
 
-SelectorNode C_StateNode::ProcessSelectors()
+SelectorNode
+C_StateNode::ProcessSelectors()
 {
 	SelectorNode newSelector;
 	uint32_t streamSig = ReadUInt32(*fs);
@@ -278,7 +326,8 @@ SelectorNode C_StateNode::ProcessSelectors()
 	return newSelector;
 }
 
-std::vector<KeyValueProp> C_StateNode::ReadKeyValueProperty(bool isNodeValue)
+std::vector<KeyValueProp>
+C_StateNode::ReadKeyValueProperty(bool isNodeValue)
 {
 	std::vector<KeyValueProp> kvProps;
 	uint32_t streamSig = ReadUInt32(*fs);

@@ -273,7 +273,7 @@ QTableView:item {
              <number>35</number>
             </attribute>
             <attribute name="horizontalHeaderDefaultSectionSize">
-             <number>90</number>
+             <number>120</number>
             </attribute>
             <attribute name="horizontalHeaderHighlightSections">
              <bool>true</bool>
@@ -643,7 +643,7 @@ QTreeView::branch:open:has-children:has-siblings  {
              <bool>true</bool>
             </property>
             <property name="uniformRowHeights">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="animated">
              <bool>true</bool>

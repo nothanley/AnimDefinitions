@@ -1,5 +1,11 @@
-#include "C_DefinitionEncoder.h"
-#include <QDebug>
+#include "DefsEncoder.h"
+//#include <QDebug>
+#include "BinaryIO.h"
+#include "Compression/zcompress.h"
+#include <iostream>
+#include <winsock.h>
+
+using namespace BinaryIO;
 using namespace std;
 
 void CDefinitionEncoder::WriteToFileWithStream(string filePath, std::vector<char>* stream /* Includes all non adef buffers */){
@@ -9,7 +15,7 @@ void CDefinitionEncoder::WriteToFileWithStream(string filePath, std::vector<char
     fs->write(stream->data(),stream->size());
     EncodeAllDefinitions();
     this->fs->close();
-    qDebug() << "compressing...";
+    //qDebug() << "compressing...";
     ADef file(filePath.c_str());
 }
 

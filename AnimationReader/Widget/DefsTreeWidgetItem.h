@@ -4,7 +4,7 @@
 
 #include <QTreeWidgetItem>
 #include "ColorItemDelegate.h"
-#include "AnimDefinitions/AnimDefHandler.h"
+#include "DefsReader.h"
 #include <QMessageBox>
 #pragma once
 

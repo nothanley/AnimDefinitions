@@ -8,6 +8,7 @@ class CTableBehavior
 {
 public:
     static void UpdateStdStringPtr(SyncedTableWidgetItem *tableItem);
+
     static void UpdateTableWithNode(DefsTreeWidgetItem* item, QTableWidgetItem* tableItem, uint32_t type, QString header);
 };
 

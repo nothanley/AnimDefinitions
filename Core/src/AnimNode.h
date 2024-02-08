@@ -1,4 +1,4 @@
-#include "C_DefStream.h"
+/* Defines node types and structures found throughout all .adef binaries */
 #pragma comment(lib, "Ws2_32.lib")
 #pragma once
 
